@@ -11,7 +11,6 @@ if (CLANGPP)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
 
-
 project(
     wheel
     VERSION 0.1.0
@@ -19,7 +18,6 @@ project(
     HOMEPAGE_URL "https://github.com/m1dsolo/wheel"
     LANGUAGES CXX
 )
-
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
@@ -31,10 +29,7 @@ target_include_directories(${TARGET} PUBLIC include)
 
 # build test
 if (BUILD_TEST)
+    set(CMAKE_CXX_STANDARD 17)
     add_subdirectory(test)
 endif()
-
-# add_executable(test test.cpp ${SRC})
-# target_include_directories(test PUBLIC include)
-# target_include_directories(test PUBLIC ${LIBRARY_OUTPUT_PATH})
 
