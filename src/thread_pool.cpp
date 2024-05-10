@@ -7,14 +7,14 @@ ThreadPool::ThreadPool(const int num) : stop_(false) {
         threads_.emplace_back([this] {
             while (true) {
                 std::unique_lock<std::mutex> lock(mutex_);
-                if (safe_queue_.empty()) {
-                    cv_.wait(lock, [this] { return stop_ || !safe_queue_.empty(); });
+                if (task_queue_.empty()) {
+                    cv_.wait(lock, [this] { return stop_ || !task_queue_.empty(); });
                 }
-                if (stop_ && safe_queue_.empty()) {
+                if (stop_ && task_queue_.empty()) {
                     return;
                 }
-                auto task = std::move(safe_queue_.front());
-                safe_queue_.pop();
+                auto task = std::move(task_queue_.front());
+                task_queue_.pop();
                 lock.unlock();
                 task();
             }

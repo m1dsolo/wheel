@@ -26,7 +26,7 @@ public:
     auto submit(F&& f, Args&& ...args) -> std::future<decltype(f(args...))> {
         auto func = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
         auto task_ptr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
-        safe_queue_.push([task_ptr] { (*task_ptr)(); });
+        task_queue_.push([task_ptr] { (*task_ptr)(); });
         cv_.notify_one();
 
         return task_ptr->get_future();
@@ -34,7 +34,7 @@ public:
 
 private:
     std::atomic<bool> stop_;
-    SafeQueue<std::function<void()>> safe_queue_;
+    SafeQueue<std::function<void()>> task_queue_;
     std::vector<std::thread> threads_;
     std::condition_variable cv_;
     std::mutex mutex_;
