@@ -11,6 +11,11 @@ if (CLANGPP)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+    message(STATUS "No build type selected, default to Release")
+endif()
+
 project(
     wheel
     VERSION 0.1.0
@@ -33,3 +38,6 @@ if (BUILD_TEST)
     add_subdirectory(test)
 endif()
 
+# add_executable(main main.cpp)
+# target_link_libraries(main wheel)
+# target_include_directories(main PRIVATE include)

@@ -5,10 +5,10 @@
 namespace wheel {
 
 TEST(ThreadPool, Basic) {
-    wheel::ThreadPool thread_pool(1);
+    wheel::ThreadPool thread_pool(4);
 
     std::vector<std::future<int>> futures;
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         futures.push_back(thread_pool.submit([](int a, int b) { return a + b; }, i, 1));
     }
 
@@ -17,10 +17,12 @@ TEST(ThreadPool, Basic) {
         results.push_back(future.get());
     }
 
-    ASSERT_EQ(results.size(), 10);
-    for (int i = 0; i < 10; ++i) {
-        EXPECT_EQ(results[i], i + 1);
+    ASSERT_EQ(results.size(), 10000);
+    int res = 0;
+    for (int i = 0; i < 10000; ++i) {
+        res += results[i];
     }
+    ASSERT_EQ(res, 50005000);
 }
 
 }  // namespace wheel

@@ -7,9 +7,7 @@ ThreadPool::ThreadPool(const int num) : stop_(false) {
         threads_.emplace_back([this] {
             while (true) {
                 std::unique_lock<std::mutex> lock(mutex_);
-                if (task_queue_.empty()) {
-                    cv_.wait(lock, [this] { return stop_ || !task_queue_.empty(); });
-                }
+                cv_.wait(lock, [this] { return stop_ || !task_queue_.empty(); });
                 if (stop_ && task_queue_.empty()) {
                     return;
                 }
