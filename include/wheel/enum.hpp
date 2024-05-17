@@ -1,23 +1,24 @@
 // TODO: handle exceptions
 #pragma once
 
+#include <source_location>
 #include <string>
 
 namespace wheel {
 
 class Enum {
 public:
-    template <typename T, int Begin = 0, int End = 256>
+    template <typename T, int Begin = 0, int End = 255>
     static std::string enum2str(T val);
 
-    template <typename T, int Begin = 0, int End = 256>
+    template <typename T, int Begin = 0, int End = 255>
     static T str2enum(const std::string& s);
 
 private:
     template <typename T, T N>
     static std::string enum2str_static_();
 
-    template <int Begin = 0, int End = 256, typename F>
+    template <int Begin = 0, int End = 255, typename F>
     static void static_for_(const F& f);
 
 };
@@ -46,7 +47,7 @@ T Enum::str2enum(const std::string& s) {
 
 template <typename T, T N>
 std::string Enum::enum2str_static_() {
-    std::string s = __PRETTY_FUNCTION__;
+    std::string s = std::source_location::current().function_name();
     auto l = s.find("N = ") + 4;
     auto r = s.find_first_of(";]", l);
     s = s.substr(l, r - l);

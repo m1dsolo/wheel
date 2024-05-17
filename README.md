@@ -7,7 +7,7 @@
 
 ## Introduction
 
-A C++ library for various types of wheels.
+A C++ library for various types of wheels(Based on c++20).
 This library is mainly written for learning purposes.
 The code structure is clear and easy to read.
 

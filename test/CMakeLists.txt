@@ -1,5 +1,4 @@
 set(TARGET_TEST wheel_test)
-set(CMAKE_CXX_STANDARD 17)
 set(GTEST_ROOT ${PROJECT_SOURCE_DIR}/third_party/googletest)
 
 add_subdirectory(${GTEST_ROOT} googletest.out)
