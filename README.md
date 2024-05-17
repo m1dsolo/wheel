@@ -16,6 +16,7 @@ The code structure is clear and easy to read.
 1. ThreadPool: A simple thread pool implementation using c++11 features.
 2. Json: A simple json parser implementation.
 3. Enum: Conversion between enum and string based on reflection.
+4. Log: A simple log library using c++20 features.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.
