@@ -8,6 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 find_program(CLANGPP NAMES clang++)
 if (CLANGPP)
+    # 打印clang版本
+    execute_process(COMMAND ${CLANGPP} --version OUTPUT_VARIABLE CLANG_VERSION)
+    message(STATUS "Found clang++: ${CLANGPP} (${CLANG_VERSION})")
+
     # maybe need version of clang++ >= 16
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-enum-constexpr-conversion")
 endif()
