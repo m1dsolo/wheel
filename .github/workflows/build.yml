@@ -24,6 +24,11 @@ jobs:
       with:
         submodules: recursive
 
+    # github's ubuntu-latest clang version is 14, not fully support googletest with c++20
+    - uses: egor-tensin/setup-clang@v1
+      with:
+        version: 17
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
