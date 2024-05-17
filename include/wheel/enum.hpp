@@ -1,6 +1,7 @@
 // TODO: handle exceptions
 #pragma once
 
+#include <optional>
 #include <source_location>
 #include <string>
 
@@ -12,7 +13,7 @@ public:
     static std::string enum2str(T val);
 
     template <typename T, int Begin = 0, int End = 255>
-    static T str2enum(const std::string& s);
+    static std::optional<T> str2enum(const std::string& s);
 
 private:
     template <typename T, T N>
@@ -37,12 +38,12 @@ std::string Enum::enum2str(T val) {
 }
 
 template <typename T, int Begin, int End>
-T Enum::str2enum(const std::string& s) {
+std::optional<T> Enum::str2enum(const std::string& s) {
     for (int i = Begin; i <= End; i++) {
         if (s == enum2str((T)i))
             return (T)i;
     }
-    throw;
+    return std::nullopt;
 }
 
 template <typename T, T N>
@@ -51,9 +52,9 @@ std::string Enum::enum2str_static_() {
     auto l = s.find("N = ") + 4;
     auto r = s.find_first_of(";]", l);
     s = s.substr(l, r - l);
-    auto i = s.find("::");
+    auto i = s.find_last_of("::");
     if (i != s.npos)
-        s = s.substr(i + 2);
+        s = s.substr(i + 1);
     return s;
 }
 
