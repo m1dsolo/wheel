@@ -14,17 +14,31 @@ The code structure is clear and easy to read.
 ## Features
 
 1. ThreadPool: A simple thread pool implementation using c++11 features.
+2. Json: A simple json parser implementation.
+3. Enum: Conversion between enum and string based on reflection.
 
 ## Install
 
 Feel free to copy code into your project.
-If you want to use this library as a static library, you can build it by following the instructions below.
+
+### Use as `wheel` as a static library
+
+```cmake
+git clone https://github.com/m1dsolo/wheel.git
+add_subdirectory(wheel)
+target_link_libraries(${YOUR_TARGET} wheel)
+target_include_directories(${YOUR_TARGET} PRIVATE wheel/include)
+```
+
+### Test `wheel` with `googletest`
 
 ```bash
-git clone https://github.com/m1dsolo/wheel.git
+git clone --recursive https://github.com/m1dsolo/wheel.git  # `--recursive` for googletest
 cd path/to/project
 cmake -B build
-cmake --build build -j4
+cmake --build build -j4 -DBUILD_WHEEL_TEST=1
+#  add flag `-DCMAKE_BUILD_TYPE=Debug` to use debug mode instead of release mode
+./build/test/wheel_test  # run test
 ```
 
 ## License

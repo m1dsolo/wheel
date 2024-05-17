@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-option(BUILD_TEST "build test" ON)
+option(BUILD_WHEEL_TEST "build wheel test" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,7 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 find_program(CLANGPP NAMES clang++)
 if (CLANGPP)
-    set(CMAKE_CXX_COMPILER clang++)
+    set(CMAKE_CXX_COMPILER ${CLANGPP})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-enum-constexpr-conversion")  # Enum bug, use SFINAE to instead of it
 endif()
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -33,11 +34,10 @@ add_library(${TARGET} STATIC ${SRC})
 target_include_directories(${TARGET} PUBLIC include)
 
 # build test
-if (BUILD_TEST)
-    set(CMAKE_CXX_STANDARD 17)
+if (BUILD_WHEEL_TEST)
     add_subdirectory(test)
 endif()
 
-# add_executable(main main.cpp)
-# target_link_libraries(main wheel)
-# target_include_directories(main PRIVATE include)
+add_executable(main main.cpp)
+target_link_libraries(main wheel)
+target_include_directories(main PRIVATE include)
