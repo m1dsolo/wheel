@@ -37,8 +37,31 @@ using JsonValueType = std::variant<
 class JsonObject {
 public:
     JsonObject() : value_(std::monostate()) {}
-    JsonObject(JsonValueType &value) : value_(value) {}
-    JsonObject(JsonValueType &&value) : value_(std::move(value)) {}
+    explicit JsonObject(JsonValueType& value) : value_(value) {}
+    JsonObject& operator=(const JsonValueType& other) { value_ = other; return *this; }
+    explicit JsonObject(JsonValueType&& value) : value_(std::move(value)) {}
+    JsonObject& operator=(JsonValueType&& other) { value_ = std::move(other); return *this; }
+    //
+    explicit operator std::nullptr_t() const { return get<std::nullptr_t>(); }
+    explicit operator bool() const { return get<bool>(); }
+    explicit operator int() const { return get<int>(); }
+    explicit operator double() const { return get<double>(); }
+    explicit operator std::string&() { return get<std::string>(); }
+    explicit operator JsonListType&() { return get<JsonListType>(); }
+    explicit operator JsonDictType&() { return get<JsonDictType>(); }
+    explicit operator const std::string&() const { return get<std::string>(); }
+    explicit operator const JsonListType&() const { return get<JsonListType>(); }
+    explicit operator const JsonDictType&() const { return get<JsonDictType>(); }
+    JsonObject& operator[](size_t i) { return get<JsonListType>()[i]; }
+    JsonObject& operator[](const std::string& key) { return get<JsonDictType>()[key]; }
+    const JsonObject& operator[](size_t i) const { return get<JsonListType>()[i]; }
+    const JsonObject& operator[](const std::string& key) const { return get<JsonDictType>().at(key); }
+
+    bool empty() const { return value_.index() == 0; }
+
+private:
+    friend class Json;
+    friend std::ostream& operator<<(std::ostream& os, const JsonObject& obj);
 
     template<typename T>
     T& get() { return std::get<T>(value_); }
@@ -46,15 +69,12 @@ public:
     const T& get() const { return std::get<T>(value_); }
 
     JsonValueType value_;
-
-private:
-    friend class Json;
-    friend std::ostream& operator<<(std::ostream& os, const JsonObject& obj);
 };
 
 class Json {
 public:
     static JsonObject parse(std::string_view json);
+    static JsonObject parse_file(const std::string& json_file_name);
 
 private:
     static std::pair<JsonObject, size_t> parse_(std::string_view json);

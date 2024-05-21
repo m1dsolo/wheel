@@ -1,14 +1,31 @@
 #include <wheel/json.hpp>
 
+#include <fstream>
 #include <regex>
+#include <iomanip>
 
 namespace wheel {
 
 JsonObject Json::parse(std::string_view json) {
     auto [res, len] = parse_(json);
     if (len != json.length())
-        return JsonObject{};
+        return {};
     return res;
+}
+
+JsonObject Json::parse_file(const std::string& json_file_name) {
+    std::ifstream file(json_file_name, std::ios::in);
+    if (!file.good()) {
+        return {};
+    }
+
+    std::string json, line;
+    while (std::getline(file, line)) {
+        line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+        json += line;
+    }
+
+    return wheel::Json::parse(json);
 }
 
 const std::unordered_map<char, char> Json::unescaped_chars_map = {
@@ -24,7 +41,7 @@ const std::unordered_map<char, char> Json::unescaped_chars_map = {
 
 std::pair<JsonObject, size_t> Json::parse_(std::string_view json) {
     if (json.empty()) {
-        return { JsonObject{}, 0 };
+        return {{}, 0};
     // remove leading space
     } else if (size_t i = json.find_first_not_of(" \n\r\t\v\f\0")) {
         auto [obj, j] = parse_(json.substr(i));
@@ -42,21 +59,21 @@ std::pair<JsonObject, size_t> Json::parse_(std::string_view json) {
     } else if (json[0] == '{') {
         return parse_dict_(json);
     }
-    return { JsonObject{}, 0 };
+    return {{}, 0};
 }
 
 std::pair<JsonObject, size_t> Json::parse_null_(std::string_view json) {
     if (json.substr(0, 4) == "null")
-        return { JsonObject{nullptr}, 4 };
-    return { JsonObject{}, 0 };
+        return {JsonObject{nullptr}, 4};
+    return {{}, 0 };
 }
 
 std::pair<JsonObject, size_t> Json::parse_bool_(std::string_view json) {
     if (json.substr(0, 4) == "true")
-        return { JsonObject{true}, 4 };
+        return {JsonObject{true}, 4};
     else if (json.substr(0, 5) == "false")
-        return { JsonObject{false}, 5 };
-    return { JsonObject{}, 0 };
+        return {JsonObject{false}, 5};
+    return {{}, 0};
 }
 
 std::pair<JsonObject, size_t> Json::parse_num_(std::string_view json) {
@@ -65,12 +82,12 @@ std::pair<JsonObject, size_t> Json::parse_num_(std::string_view json) {
     if (std::regex_search(json.begin(), json.end(), match, num_pattern)) {
         std::string str = match.str();
         if (auto num = try_parse_num_<int>(str)) {
-            return { JsonObject{*num}, str.length() };
+            return {JsonObject{*num}, str.length()};
         } else if (auto num = try_parse_num_<double>(str)) {
-            return { JsonObject{*num}, str.length() };
+            return {JsonObject{*num}, str.length()};
         }
     }
-    return { JsonObject{}, 0 };
+    return {JsonObject{}, 0};
 }
 
 std::pair<JsonObject, size_t> Json::parse_str_(std::string_view json) {
@@ -93,7 +110,7 @@ std::pair<JsonObject, size_t> Json::parse_str_(std::string_view json) {
             raw = true;
         }
     }
-    return { JsonObject{std::move(str)}, i };
+    return {JsonObject{std::move(str)}, i};
 }
 
 std::pair<JsonObject, size_t> Json::parse_list_(std::string_view json) {
@@ -114,7 +131,7 @@ std::pair<JsonObject, size_t> Json::parse_list_(std::string_view json) {
         if (json[i] == ',')
             ++i;
     }
-    return { JsonObject{std::move(res)}, i };
+    return {JsonObject{std::move(res)}, i};
 }
 
 std::pair<JsonObject, size_t> Json::parse_dict_(std::string_view json) {
@@ -150,7 +167,7 @@ std::pair<JsonObject, size_t> Json::parse_dict_(std::string_view json) {
         if (json[i] == ',')
             ++i;
     }
-    return { JsonObject{std::move(res)}, i };
+    return {JsonObject{std::move(res)}, i};
 }
 
 char Json::decode_unescaped_char_(char c) {
