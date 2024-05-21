@@ -3,11 +3,11 @@
 namespace wheel {
 
 LogLevel Log::max_log_level_ = []() {
-    if (auto log_level_env = std::getenv("LOG_LEVEL")) {
-        if (auto level = Enum::str2enum<LogLevel, 0, 4>(log_level_env))
-            return level.value();
+    const char* log_level = std::getenv("LOG_LEVEL");
+    if (log_level == nullptr) {
+        return LogLevel::INFO;
     }
-    return LogLevel::INFO;
+    return Enum::str2enum<LogLevel, 0, 4>(log_level).value_or(LogLevel::INFO);
 } ();
 
 std::ofstream Log::log_file_ = []() {

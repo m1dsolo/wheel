@@ -1,3 +1,6 @@
+// TODO: 异步
+// TODO: 日志文件滚动（跨天或者文件大于一定大小，会建立新文件）
+// TODO: 考虑程序崩溃
 #pragma once
 
 #include <chrono>
