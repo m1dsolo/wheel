@@ -21,4 +21,4 @@ cmake --build build -j4
 ```bash
 telnet 127.0.0.1 12345
 ```
-You can modify the `port` and `num_threads` of ThreadPool at `src/main.cpp`.
+You can modify the `port` and `num_threads` of ThreadPool in `echo_server.json`.

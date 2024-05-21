@@ -7,4 +7,5 @@ target_include_directories(${TARGET}
     PRIVATE ${PROJECT_SOURCE_DIR}/include
 )
 target_link_libraries(${TARGET} PRIVATE wheel)
-
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/echo_server.json
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
