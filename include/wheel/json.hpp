@@ -24,24 +24,24 @@ class JsonObject;
 using JsonListType = std::vector<JsonObject>;
 using JsonDictType = std::unordered_map<std::string, JsonObject>;
 using JsonValueType = std::variant<
-    std::monostate,  // error
-    std::nullptr_t,  // null
-    bool,            // true
-    int,             // 123
-    double,          // 3.14
-    std::string,     // "hello"
-    JsonListType,  // [123, "hello"]
-    JsonDictType  // {"hello": 123, "world": 3.14}
+    std::monostate, // error
+    std::nullptr_t, // null
+    bool,           // true
+    int,            // 123
+    double,         // 3.14
+    std::string,    // "hello"
+    JsonListType,   // [123, "hello"]
+    JsonDictType    // {"hello": 123, "world": 3.14}
 >;
 
 class JsonObject {
 public:
     JsonObject() : value_(std::monostate()) {}
     explicit JsonObject(JsonValueType& value) : value_(value) {}
-    JsonObject& operator=(const JsonValueType& other) { value_ = other; return *this; }
     explicit JsonObject(JsonValueType&& value) : value_(std::move(value)) {}
+    JsonObject& operator=(const JsonValueType& other) { value_ = other; return *this; }
     JsonObject& operator=(JsonValueType&& other) { value_ = std::move(other); return *this; }
-    //
+
     explicit operator std::nullptr_t() const { return get<std::nullptr_t>(); }
     explicit operator bool() const { return get<bool>(); }
     explicit operator int() const { return get<int>(); }
@@ -99,4 +99,4 @@ private:
     static const std::unordered_map<char, char> unescaped_chars_map;
 };
 
-};  // namespace wheel
+}  // namespace wheel

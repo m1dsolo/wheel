@@ -110,4 +110,4 @@ void Log::log(LogLevel level, with_source_location_<std::format_string<Args...>>
     }
 }
 
-};  // namespace wheel
+}  // namespace wheel

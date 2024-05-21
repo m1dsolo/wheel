@@ -21,5 +21,4 @@ std::string Log::add_color_to_string_(LogLevel level, const std::string& s, std:
     return std::format("\E[{}{}\E[m", color, s);
 }
 
-};  // namespace wheel;
-
+}  // namespace wheel

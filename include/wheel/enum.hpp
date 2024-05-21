@@ -68,4 +68,4 @@ void Enum::static_for_(const F& f) {
     }
 }
 
-};  // namespace wheel
+}  // namespace wheel

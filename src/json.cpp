@@ -213,4 +213,4 @@ std::ostream& operator<<(std::ostream& os, const JsonObject& obj) {
     return os;
 }
 
-};  // namespace wheel
+}  // namespace wheel

@@ -46,4 +46,4 @@ private:
     unsigned short port_ = 0;
 };
 
-}  // namespace wheel;
+}  // namespace wheel

@@ -75,4 +75,4 @@ void Server::del_socket_(std::shared_ptr<Socket> socket) {
     handlers_map_.erase(socket);
 }
 
-};  // namespace wheel
+}  // namespace wheel

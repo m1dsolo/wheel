@@ -20,4 +20,4 @@ TEST(EnumTest, Str2Enum) {
     EXPECT_EQ(Enum::str2enum<Color>("BLUE"), BLUE);
 }
 
-};  // namespace wheel
+}  // namespace wheel
