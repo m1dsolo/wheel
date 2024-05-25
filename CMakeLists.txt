@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 option(BUILD_WHEEL_TEST "build wheel test" OFF)
 option(BUILD_ECHO_SERVER "build echo server" OFF)
 option(BUILD_CHAT_SERVER "build echo server" OFF)
+option(BUILD_MYSQL "build mysql" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,15 +50,25 @@ if (BUILD_WHEEL_TEST)
     add_subdirectory(test)
 endif()
 
+# build echo server
 if (BUILD_ECHO_SERVER)
     add_subdirectory(example/echo_server)
 endif()
 
+# build chat server
 if (BUILD_CHAT_SERVER)
     add_subdirectory(example/chat_server)
 endif()
 
+# build mysql connector
+if (BUILD_MYSQL)
+    message(${BUILD_MYSQL})
+    find_package(MySQL REQUIRED)
+    include_directories(${MYSQL_INCLUDE_DIRS})
+    # target_link_libraries(your_target_name ${MYSQL_LIBRARIES})
+endif()
+
 # use to test
-# add_executable(main main.cpp)
-# target_link_libraries(main wheel)
-# target_include_directories(main PRIVATE include)
+add_executable(main main.cpp)
+target_link_libraries(main wheel)
+target_include_directories(main PRIVATE include)

@@ -19,22 +19,21 @@ class ListenHandler;
 class Server {
     friend class ListenHandler;
 public:
-    Server(std::function<std::shared_ptr<SocketHandler>()> create_handler, int num_threads = 4)
-        : create_handler_(create_handler), thread_pool_(num_threads) {}
-    ~Server() {}
-    Server(const Server &) = delete;
-    Server &operator=(const Server &) = delete;
+    Server() = default;
+    ~Server() = default;
 
-    void start(unsigned short port);
+    void start(
+        std::function<std::shared_ptr<SocketHandler>()> create_handler,
+        unsigned short port,
+        int num_threads);
 
 private:
-    bool init_(unsigned short port);
+    bool init_listen_(unsigned short port);
     void del_socket_(std::shared_ptr<Socket> socket);
 
     Epoll epoll_;
     bool stop_ = false;
     ThreadPool thread_pool_;
-    std::shared_ptr<ListenHandler> listen_handler_;
     std::unordered_map<std::shared_ptr<Socket>, std::shared_ptr<SocketHandler>> handlers_map_;
     std::function<std::shared_ptr<SocketHandler>()> create_handler_;
 };

@@ -14,13 +14,16 @@ namespace wheel {
 
 class ThreadPool {
 public:
-    explicit ThreadPool(const int num);
+    ThreadPool() = default;
+    explicit ThreadPool(int num);
     ~ThreadPool();
 
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
     ThreadPool(ThreadPool&&) = delete;
     ThreadPool& operator=(ThreadPool&&) = delete;
+
+    void add_thread(int num = 1);
 
     template<typename F, typename ...Args>
     auto submit(F&& f, Args&& ...args) -> std::future<decltype(f(args...))> {
@@ -33,7 +36,7 @@ public:
     }
 
 private:
-    std::atomic<bool> stop_;
+    std::atomic<bool> stop_ = false;
     SafeQueue<std::function<void()>> task_queue_;
     std::vector<std::thread> threads_;
     std::condition_variable cv_;

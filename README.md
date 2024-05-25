@@ -22,6 +22,7 @@ The code structure is clear and easy to read.
 7. Server: Abstract server in reactor mode.
 
     - `example/echo_server`: A simple echo server.
+    - `example/chat_server`: A simple chat server.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.

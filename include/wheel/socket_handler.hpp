@@ -9,11 +9,9 @@ class Server;
 
 class SocketHandler {
 public:
-    SocketHandler() {}
+    SocketHandler() = default;
     SocketHandler(std::shared_ptr<Socket> socket, Server* server) : socket_(socket), server_(server) {}
-    virtual ~SocketHandler() {}
-    SocketHandler(const SocketHandler &) = delete;
-    SocketHandler &operator=(const SocketHandler &) = delete;
+    virtual ~SocketHandler() = default;
 
     virtual bool process() = 0;
 
@@ -27,11 +25,9 @@ protected:
 
 class ListenHandler : public SocketHandler {
 public:
-    ListenHandler() {}
+    ListenHandler() = default;
     ListenHandler(std::shared_ptr<Socket> socket, Server* server) : SocketHandler(socket, server) {}
-    ~ListenHandler() {}
-    ListenHandler(const ListenHandler &) = delete;
-    ListenHandler &operator=(const ListenHandler &) = delete;
+    ~ListenHandler() = default;
 
     virtual bool process() override; 
 };

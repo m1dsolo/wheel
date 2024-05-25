@@ -18,8 +18,12 @@ int main(int argc, const char *argv[]) {
         wheel::Log::info("Failed to load echo_server.json, using default values(port=12345, num_threads=4).");
     }
 
-    auto server = wheel::Server([]() {return std::make_shared<wheel::EchoHandler>();}, num_threads);
-    server.start(port);
+    auto server = wheel::Server();
+    server.start(
+        []() {return std::make_shared<wheel::EchoHandler>();},
+        port,
+        num_threads
+    );
 
     return 0;
 }

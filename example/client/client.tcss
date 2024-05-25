@@ -1,0 +1,7 @@
+#chat-log {
+    background: $boost;
+    color: $text;
+    padding: 0 2;
+    border: tall $background;
+    width: 100%;
+}

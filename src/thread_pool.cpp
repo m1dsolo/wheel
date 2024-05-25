@@ -2,7 +2,11 @@
 
 namespace wheel {
 
-ThreadPool::ThreadPool(const int num) : stop_(false) {
+ThreadPool::ThreadPool(int num) {
+    add_thread(num);
+}
+
+void ThreadPool::add_thread(int num) {
     for (int i = 0; i < num; ++i) {
         threads_.emplace_back([this] {
             while (true) {
