@@ -21,8 +21,10 @@ The code structure is clear and easy to read.
 6. Epoll: Encapsulation of `c` epoll api.
 7. Server: Abstract server in reactor mode.
 
-    - `example/echo_server`: A simple echo server.
-    - `example/chat_server`: A simple chat server.
+    - [example/echo_server](./example/echo_server): A simple echo server.
+    - [example/chat_server](./example/chat_server): A simple chat server.
+
+        [chat_intro_video](https://github.com/m1dsolo/wheel/assets/74849775/664feba9-5724-4e6b-b46f-a330101b21fa)
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.

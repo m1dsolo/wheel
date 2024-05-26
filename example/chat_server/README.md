@@ -5,6 +5,8 @@ A simple chat server based on `wheel`.
 features:
 1. group chat
 
+[intro_video](https://github.com/m1dsolo/wheel/assets/74849775/664feba9-5724-4e6b-b46f-a330101b21fa)
+
 ## Install
 
 ```bash
@@ -17,8 +19,13 @@ cmake --build build -j4
 1. run server
 
 ```bash
+# basic usage:
 ./build/example/chat_server/chat_server
+
+# set log level and log file by environment variables:
+LOG_LEVEL=DEBUG LOG_FILE=log.txt ./build/example/chat_server/chat_server
 ```
+
 You can modify the `port` and `num_threads` of ThreadPool in `chat_server.json`.
 
 2. run client
