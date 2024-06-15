@@ -52,17 +52,17 @@ public:
     }
 
     template <typename T>
-    static void log(LogLevel level, T& val, std::source_location loc = std::source_location::current());
+    static void log(LogLevel level, const T& val, std::source_location loc = std::source_location::current());
     template <typename T>
-    static void debug(T& val) { return log(LogLevel::DEBUG, val); }
+    static void debug(const T& val) { return log(LogLevel::DEBUG, val); }
     template <typename T>
-    static void info(T& val) { return log(LogLevel::INFO, val); }
+    static void info(const T& val) { return log(LogLevel::INFO, val); }
     template <typename T>
-    static void warning(T& val) { return log(LogLevel::WARNING, val); }
+    static void warning(const T& val) { return log(LogLevel::WARNING, val); }
     template <typename T>
-    static void error(T& val) { return log(LogLevel::ERROR, val); }
+    static void error(const T& val) { return log(LogLevel::ERROR, val); }
     template <typename T>
-    static void fatal(T& val) { return log(LogLevel::FATAL, val); }
+    static void fatal(const T& val) { return log(LogLevel::FATAL, val); }
 
     static void set_log_level(LogLevel level) { max_log_level_ = level; }
     static void set_log_file(std::string_view s) { log_file_.open(s.data(), std::ios::app); }
@@ -105,7 +105,7 @@ void Log::log(LogLevel level, with_source_location_<std::format_string<Args...>>
 }
 
 template <typename T>
-void Log::log(LogLevel level, T& val, std::source_location loc) {
+void Log::log(LogLevel level, const T& val, std::source_location loc) {
     return log_(level, std::format("{}", val), loc);
 }
 
