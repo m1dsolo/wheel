@@ -37,10 +37,7 @@ using JsonValueType = std::variant<
 class JsonObject {
 public:
     JsonObject() : value_(std::monostate()) {}
-    explicit JsonObject(JsonValueType& value) : value_(value) {}
-    explicit JsonObject(JsonValueType&& value) : value_(std::move(value)) {}
-    JsonObject& operator=(const JsonValueType& other) { value_ = other; return *this; }
-    JsonObject& operator=(JsonValueType&& other) { value_ = std::move(other); return *this; }
+    explicit JsonObject(const JsonValueType& value) : value_(value) {}
 
     explicit operator std::nullptr_t() const { return get<std::nullptr_t>(); }
     explicit operator bool() const { return get<bool>(); }
