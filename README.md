@@ -16,7 +16,7 @@ The code structure is clear and easy to read.
 1. ThreadPool: thread pool.
 2. Json: json parser.
 3. Enum: Conversion between `enum` and `string` based on reflection.
-4. Log: log library.
+4. Log: for logging and assert.
 5. Socket: Encapsulation of `c` socket api.
 6. Epoll: Encapsulation of `c` epoll api.
 7. Server: Abstract server in reactor mode.
@@ -25,6 +25,10 @@ The code structure is clear and easy to read.
     - [example/chat_server](./example/chat_server): A simple chat server.
 
         [chat_intro_video](https://github.com/m1dsolo/wheel/assets/74849775/664feba9-5724-4e6b-b46f-a330101b21fa)
+
+8. Singleton: Singleton base class.
+9. Csv: Read and parse csv file.
+10. Utils: Some useful functions.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.
