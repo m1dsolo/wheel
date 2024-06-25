@@ -50,7 +50,6 @@ public:
     static void fatal(with_source_location_<std::format_string<Args...>> fmt, Args&& ...args) {
         return log(LogLevel::FATAL, fmt, std::forward<Args>(args)...);
     }
-
     template <typename ...Args>
     static void assert(bool condition, with_source_location_<std::format_string<Args...>> fmt, Args&& ...args) {
         if (!condition) {
@@ -62,19 +61,36 @@ public:
     template <typename T>
     static void log(LogLevel level, const T& val, std::source_location loc = std::source_location::current());
     template <typename T>
-    static void debug(const T& val) { return log(LogLevel::DEBUG, val); }
+    static void debug(const T& val, std::source_location loc = std::source_location::current()) {
+        return log(LogLevel::DEBUG, val, loc);
+    }
     template <typename T>
-    static void info(const T& val) { return log(LogLevel::INFO, val); }
+    static void info(const T& val, std::source_location loc = std::source_location::current()) {
+        return log(LogLevel::INFO, val, loc);
+    }
     template <typename T>
-    static void warning(const T& val) { return log(LogLevel::WARNING, val); }
+    static void warning(const T& val, std::source_location loc = std::source_location::current()) {
+        return log(LogLevel::WARNING, val, loc);
+    }
     template <typename T>
-    static void error(const T& val) { return log(LogLevel::ERROR, val); }
+    static void error(const T& val, std::source_location loc = std::source_location::current()) {
+        return log(LogLevel::ERROR, val, loc);
+    }
     template <typename T>
-    static void fatal(const T& val) { return log(LogLevel::FATAL, val); }
+    static void fatal(const T& val, std::source_location loc = std::source_location::current()) {
+        return log(LogLevel::FATAL, val, loc);
+    }
     template <typename T>
-    static void assert(bool condition, const T& val) {
+    static void assert(bool condition, const T& val, std::source_location loc = std::source_location::current()) {
         if (!condition) {
-            log(LogLevel::ERROR, val);
+            log(LogLevel::ERROR, val, loc);
+            exit(1);
+        }
+    }
+    template <typename F> requires std::invocable<F> && std::convertible_to<std::invoke_result_t<F>, std::string>
+    static void assert(bool condition, const F& f, std::source_location loc = std::source_location::current()) {
+        if (!condition) {
+            log(LogLevel::ERROR, f(), loc);
             exit(1);
         }
     }
