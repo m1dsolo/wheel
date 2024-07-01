@@ -3,7 +3,6 @@
 // TODO: 考虑程序崩溃
 #pragma once
 
-#include <chrono>
 #include <cstdint>
 #include <format>
 #include <fstream>

@@ -1,5 +1,7 @@
 #include <wheel/log.hpp>
 
+#include <chrono>
+
 namespace wheel {
 
 LogLevel Log::max_log_level_ = []() {
