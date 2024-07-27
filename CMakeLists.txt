@@ -5,7 +5,7 @@ option(BUILD_ECHO_SERVER "build echo server" OFF)
 option(BUILD_CHAT_SERVER "build chat server" OFF)
 # option(BUILD_MYSQL "build mysql" OFF)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
@@ -37,6 +37,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 # build wheel
 set(TARGET wheel)
 file(GLOB_RECURSE SRC CONFIGURE_DEPENDS src/*.cpp)
+
+# 定义要移除的文件
+set(REMOVE_ITEMS "${CMAKE_CURRENT_SOURCE_DIR}/src/ecs.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/ecs.hpp")
+
+# 从SRC列表中移除这些文件
+list(REMOVE_ITEM SRC ${REMOVE_ITEMS})
+
 add_library(${TARGET} STATIC ${SRC})
 target_include_directories(${TARGET} PUBLIC include)
 
@@ -62,7 +69,7 @@ endif()
 #     # target_link_libraries(your_target_name ${MYSQL_LIBRARIES})
 # endif()
 
-# use to test
-# add_executable(main main.cpp)
-# target_link_libraries(main wheel)
-# target_include_directories(main PRIVATE include)
+# use to tmp test
+# add_executable(wheel_tmp main.cpp)
+# target_link_libraries(wheel_tmp wheel)
+# target_include_directories(wheel_tmp PRIVATE include)

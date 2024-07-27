@@ -27,6 +27,14 @@ JsonObject Json::parse_file(const std::string& json_file_name) {
     return wheel::Json::parse(json);
 }
 
+void Json::save(const JsonObject& obj, const std::string& json_file_name) {
+    std::ofstream file(json_file_name, std::ios::out);
+    if (!file.good()) {
+        return;
+    }
+    file << obj;
+}
+
 const std::unordered_map<char, char> Json::unescaped_chars_map = {
     {'n', '\n'},
     {'r', '\r'},
@@ -113,7 +121,7 @@ std::pair<JsonObject, size_t> Json::parse_str_(std::string_view json) {
 }
 
 std::pair<JsonObject, size_t> Json::parse_list_(std::string_view json) {
-    std::vector<JsonObject> res;
+    JsonListType res;
     size_t i = 1;
     while (i < json.length()) {
         if (json[i] == ']') {
@@ -134,7 +142,7 @@ std::pair<JsonObject, size_t> Json::parse_list_(std::string_view json) {
 }
 
 std::pair<JsonObject, size_t> Json::parse_dict_(std::string_view json) {
-    std::unordered_map<std::string, JsonObject> res;
+    JsonDictType res;
     size_t i = 1;
     while (i < json.length()) {
         if (json[i] == '}') {
@@ -186,7 +194,7 @@ std::ostream& operator<<(std::ostream& os, const JsonObject& obj) {
             os << v;
         } else if constexpr (std::is_same_v<T, std::string>) {
             os << '"' << v << '"';
-        } else if constexpr (std::is_same_v<T, std::vector<Json>>) {
+        } else if constexpr (std::is_same_v<T, JsonListType>) {
             os << '[';
             for (size_t i = 0; i < v.size(); ++i) {
                 os << v[i];
@@ -195,7 +203,7 @@ std::ostream& operator<<(std::ostream& os, const JsonObject& obj) {
                 }
             }
             os << ']';
-        } else if constexpr (std::is_same_v<T, std::unordered_map<std::string, Json>>) {
+        } else if constexpr (std::is_same_v<T, JsonDictType>) {
             os << '{';
             bool first = true;
             for (const auto& [key, value] : v) {

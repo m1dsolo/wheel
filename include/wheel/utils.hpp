@@ -34,6 +34,16 @@ public:
         }
         return res;
     }
+
+    // boost hash_combine
+    struct hash_pair {
+        template <typename T, typename U>
+        size_t operator() (const std::pair<T, U>& p) const {
+            size_t h1 = std::hash<T>{}(p.first);
+            size_t h2 = std::hash<U>{}(p.second);
+            return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+        }
+    };
 };
 
 template <typename T>

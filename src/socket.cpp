@@ -1,11 +1,13 @@
 #include <wheel/socket.hpp>
 
+#include <cstring>
+
 #include <wheel/log.hpp>
 
 namespace wheel {
 
 bool Socket::init(int flags) {
-    fd_ = socket(AF_INET, flags, 0);  // TCP
+    fd_ = socket(AF_INET, SOCK_STREAM | flags, 0);  // TCP
     return fd_ != -1;
 }
 
@@ -66,6 +68,7 @@ bool Socket::set_reuse_addr() {
 }
 
 bool Socket::send(std::string_view s) {
+    Log::debug("Socket::send: {}", s);
     return ::send(fd_, s.data(), s.length(), 0) != -1;
 }
 
@@ -73,10 +76,10 @@ bool Socket::recv(std::span<char> buf) {
     int n = ::recv(fd_, buf.data(), buf.size(), 0);
     if (n == -1) {
         if (errno == EAGAIN) {
-            Log::debug("recv: EAGAIN");
+            Log::debug("Socket::recv: EAGAIN");
             return true;
         } else [[unlikely]] {
-            Log::fatal("recv: other");
+            Log::error("Socket::recv: {}", std::strerror(errno));
         }
         return false;
     }

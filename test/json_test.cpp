@@ -5,52 +5,52 @@
 namespace wheel {
 
 TEST(JsonParseTest, ParseNull) {
-    auto res = std::nullptr_t(Json::parse("null"));
-    EXPECT_EQ(res, nullptr);
+    std::nullptr_t ptr = Json::parse("null");
+    EXPECT_EQ(ptr, nullptr);
 }
 
 TEST(JsonParseTest, ParseBool) {
-    auto res = bool(Json::parse("true"));
-    EXPECT_EQ(res, true);
-    res = bool(Json::parse("false"));
-    EXPECT_EQ(res, false);
+    bool val = Json::parse("true");
+    EXPECT_EQ(val, true);
+    val = Json::parse("false");
+    EXPECT_EQ(val, false);
 }
 
 TEST(JsonParseTest, ParseInt) {
-    auto res = int(Json::parse("123"));
-    EXPECT_EQ(res, 123);
+    int val = Json::parse("123");
+    EXPECT_EQ(val, 123);
 }
 
 TEST(JsonParseTest, ParseDouble) {
-    auto res = double(Json::parse("3.14"));
-    EXPECT_EQ(res, 3.14);
+    double val = Json::parse("3.14");
+    EXPECT_EQ(val, 3.14);
 }
 
 TEST(JsonParseTest, ParseString) {
-    const auto& res = std::string(Json::parse(R"("hello")"));
-    EXPECT_EQ(res, R"(hello)");
+    std::string s = Json::parse(R"("hello")");
+    EXPECT_EQ(s, R"(hello)");
 }
 
 TEST(JsonParseTest, ParseStringQuote) {
-    const auto& res = std::string(Json::parse(R"("\"hello\"")"));
-    EXPECT_EQ(res, "\"hello\"");
+    std::string s = Json::parse(R"("\"hello\"")");
+    EXPECT_EQ(s, "\"hello\"");
 }
 
 TEST(JsonParseTest, ParseStringEscape) {
-    const auto& res = std::string(Json::parse(R"("hello\nworld")"));
-    EXPECT_EQ(res, "hello\nworld");
+    std::string s = Json::parse(R"("hello\nworld")");
+    EXPECT_EQ(s, "hello\nworld");
 }
 
 TEST(JsonParseTest, ParseList) {
-    const auto& res = Json::parse(R"([123, "hello"])");
-    EXPECT_EQ(int(res[0]), 123);
-    EXPECT_EQ(std::string(res[1]), "hello");
+    auto json = Json::parse(R"([123, "hello"])");
+    EXPECT_EQ(static_cast<int>(json[0]), 123);
+    EXPECT_EQ(json[1], "hello");
 }
 
 TEST(JsonParseTest, ParseDict) {
-    const auto& res = Json::parse(R"({"hello": 123, "world": 3.14})");
-    EXPECT_EQ(int(res["hello"]), 123);
-    EXPECT_EQ(double(res["world"]), 3.14);
+    auto json = Json::parse(R"({"hello": 123, "world": 3.14})");
+    EXPECT_EQ(static_cast<int>(json["hello"]), 123);
+    EXPECT_EQ(static_cast<double>(json["world"]), 3.14);
 }
 
 TEST(JsonParseTest, ParseEmpty) {
@@ -64,10 +64,10 @@ TEST(JsonParseTest, ParseError) {
 }
 
 TEST(JsonParseTest, ParseNested) {
-    const auto& res = Json::parse(R"({"hello": {"key": null}, "world": [3.14, {"key": true}]})");
-    EXPECT_EQ(std::nullptr_t(res["hello"]["key"]), nullptr);
-    EXPECT_EQ(double(res["world"][0]), 3.14);
-    EXPECT_EQ(bool(res["world"][1]["key"]), true);
+    auto json = Json::parse(R"({"hello": {"key": null}, "world": [3.14, {"key": true}]})");
+    EXPECT_EQ(static_cast<std::nullptr_t>(json["hello"]["key"]), nullptr);
+    EXPECT_EQ(static_cast<double>(json["world"][0]), 3.14);
+    EXPECT_EQ(static_cast<bool>(json["world"][1]["key"]), true);
 }
 
 }  // namespace wheel

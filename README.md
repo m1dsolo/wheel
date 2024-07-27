@@ -29,6 +29,11 @@ The code structure is clear and easy to read.
 8. Singleton: Singleton base class.
 9. Csv: Read and parse csv file.
 10. Utils: Some useful functions.
+11. Random: Random number generator.
+12. Timer: Timer based on `std::chrono`.
+13. ObjectPool: Object pool.
+14. ECS: Entity-Component-System.
+15. geometry: Geometry calculation.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ostream>
 
 namespace wheel {
 
@@ -18,7 +19,9 @@ struct Vector2D {
     Vector2D& operator*=(double scalar) { x *= scalar; y *= scalar; return *this; }
     Vector2D& operator/=(double scalar) { x /= scalar; y /= scalar; return *this; }
     bool operator==(const Vector2D& other) const { return x == other.x && y == other.y; }
+    bool operator!=(const Vector2D& other) const { return x != other.x || y != other.y; }
     bool is_zero() const { return x == 0 && y == 0; }
+    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << "(" << v.x << ", " << v.y << ")"; }
 
     Vector2D& clamp(double x_min, double x_max, double y_min, double y_max) {
         x = std::clamp(x, x_min, x_max);
@@ -34,12 +37,20 @@ struct Vector2D {
         double length = std::sqrt(x * x + y * y);
         return {x / length, y / length};
     }
+
+    double distance(const Vector2D& other) const {
+        return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+    }
 };
 
 template <typename T>
 struct Rect {
     Vector2D<T> position;
     Vector2D<T> size;
+
+    friend std::ostream& operator<<(std::ostream& os, const Rect& rect) {
+        return os << "position: " << rect.position << ", size: " << rect.size;
+    }
 
     T intersection(const Rect<T>& other) {
         T x1 = std::max(position.x - size.x / 2, other.position.x - other.size.x / 2);
@@ -50,6 +61,12 @@ struct Rect {
             return 0;
         }
         return (x2 - x1) * (y2 - y1);
+    }
+
+    template <typename U>
+    bool intersection(const Vector2D<U>& pos) {
+        return pos.x >= position.x - size.x / 2 && pos.x <= position.x + size.x / 2 &&
+               pos.y >= position.y - size.y / 2 && pos.y <= position.y + size.y / 2;
     }
 };
 
