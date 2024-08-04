@@ -7,19 +7,20 @@
 
 #include <wheel/singleton.hpp>
 #include <wheel/log.hpp>
+#include <wheel/utils.hpp>
 
 namespace wheel {
 
 using timer_t = uint64_t;
 
 struct TimerNode {
-    TimerNode(timer_t expire_time, timer_t interval, int cnt, std::function<std::any()> func)
+    TimerNode(timer_t expire_time, timer_t interval, int cnt, std::function<std::any(int)> func)
         : expire_time(expire_time), interval(interval), cnt(cnt), func(func), id(gid_++) {}
 
     timer_t expire_time;
     timer_t interval;
     int cnt;
-    std::function<std::any()> func;
+    std::function<std::any(int)> func;
     uint32_t id;
 
     bool operator<(const TimerNode& rhs) const {
@@ -38,18 +39,30 @@ public:
     timer_t tick() const;
 
     // cnt: -1 for infinite
-    template <typename F, typename... Args>
-    void add(timer_t interval_us, int cnt, F&& f, Args&&... args) {
+    template <typename F>
+    void add(timer_t interval_us, int cnt, F&& f, bool immediately = false) {
         Log::assert(interval_us > 0, "interval_us must be positive");
-        auto func = [f = std::forward<F>(f), ...args = std::forward<Args>(args)]() -> std::any {
-            if constexpr (std::is_void_v<std::invoke_result_t<F, Args...>>) {
-                f(args...);
+        auto func = [f = std::forward<F>(f)](int cnt) -> std::any {
+            if constexpr (std::is_same_v<Utils::get_callable_return_type<F>, void>) {
+                if constexpr (std::is_invocable_v<F, int>) {
+                    f(cnt);
+                } else {
+                    f();
+                }
                 return std::any{};
             } else {
-                return f(args...);
+                if constexpr (std::is_invocable_v<F, int>) {
+                    return f(cnt);
+                } else {
+                    return f();
+                }
             }
         };
-        nodes_.insert(TimerNode(tick() + interval_us, interval_us, cnt, func));
+        if (immediately) {
+            nodes_.insert(TimerNode(tick(), interval_us, cnt, func));
+        } else {
+            nodes_.insert(TimerNode(tick() + interval_us, interval_us, cnt, func));
+        }
     }
 
     void set_pause(bool pause) { pause_ = pause; }

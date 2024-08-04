@@ -44,6 +44,9 @@ public:
             return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
         }
     };
+
+    template<typename Callable>
+    using get_callable_return_type = typename decltype(std::function{std::declval<Callable>()})::result_type;
 };
 
 template <typename T>

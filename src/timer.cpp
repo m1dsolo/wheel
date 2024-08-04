@@ -38,7 +38,7 @@ std::any Timer::update() {
 
     auto it = nodes_.begin();
     if (it != nodes_.end() && tick() >= it->expire_time) {
-        std::any res = it->func();
+        std::any res = it->func(it->cnt);
         TimerNode node = std::move(*it);
         nodes_.erase(it);
         if (node.cnt == -1 || --node.cnt > 0) {
