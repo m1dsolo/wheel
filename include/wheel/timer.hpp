@@ -3,7 +3,7 @@
 #include <any>
 #include <cstdint>
 #include <functional>
-#include <set>
+#include <queue>
 
 #include <wheel/singleton.hpp>
 #include <wheel/log.hpp>
@@ -23,8 +23,8 @@ struct TimerNode {
     std::function<std::any(int)> func;
     uint32_t id;
 
-    bool operator<(const TimerNode& rhs) const {
-        return (expire_time == rhs.expire_time) ? id < rhs.id : expire_time < rhs.expire_time;
+    bool operator>(const TimerNode& rhs) const {
+        return (expire_time == rhs.expire_time) ? id > rhs.id : expire_time > rhs.expire_time;
     }
 
 private:
@@ -59,9 +59,9 @@ public:
             }
         };
         if (immediately) {
-            nodes_.insert(TimerNode(tick(), interval_us, cnt, func));
+            nodes_.emplace(TimerNode(tick(), interval_us, cnt, func));
         } else {
-            nodes_.insert(TimerNode(tick() + interval_us, interval_us, cnt, func));
+            nodes_.emplace(TimerNode(tick() + interval_us, interval_us, cnt, func));
         }
     }
 
@@ -84,7 +84,7 @@ private:
     Timer() = default;
     Timer(const Timer&) = delete;
 
-    std::set<TimerNode> nodes_;
+    std::priority_queue<TimerNode, std::vector<TimerNode>, std::greater<TimerNode>> nodes_;
 
     // for pause and resume
     bool pause_;
