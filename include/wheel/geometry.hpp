@@ -12,18 +12,18 @@ struct Vector2D {
 
     Vector2D operator+(const Vector2D& other) const { return { x + other.x, y + other.y }; }
     Vector2D operator-(const Vector2D& other) const { return { x - other.x, y - other.y }; }
-    Vector2D operator*(double scalar) const { return { x * scalar, y * scalar}; }
-    Vector2D operator/(double scalar) const { return { x / scalar, y / scalar}; }
+    Vector2D operator*(T scalar) const { return { x * scalar, y * scalar}; }
+    Vector2D operator/(T scalar) const { return { x / scalar, y / scalar}; }
     Vector2D& operator+=(const Vector2D& other) { x += other.x; y += other.y; return *this; }
     Vector2D& operator-=(const Vector2D& other) { x -= other.x; y -= other.y; return *this; }
-    Vector2D& operator*=(double scalar) { x *= scalar; y *= scalar; return *this; }
-    Vector2D& operator/=(double scalar) { x /= scalar; y /= scalar; return *this; }
+    Vector2D& operator*=(T scalar) { x *= scalar; y *= scalar; return *this; }
+    Vector2D& operator/=(T scalar) { x /= scalar; y /= scalar; return *this; }
     bool operator==(const Vector2D& other) const { return x == other.x && y == other.y; }
     bool operator!=(const Vector2D& other) const { return x != other.x || y != other.y; }
     bool is_zero() const { return x == 0 && y == 0; }
     friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << "(" << v.x << ", " << v.y << ")"; }
 
-    Vector2D& clamp(double x_min, double x_max, double y_min, double y_max) {
+    Vector2D& clamp(T x_min, T x_max, T y_min, T y_max) {
         x = std::clamp(x, x_min, x_max);
         y = std::clamp(y, y_min, y_max);
         return *this;
@@ -34,11 +34,11 @@ struct Vector2D {
             return *this;
         }
 
-        double length = std::sqrt(x * x + y * y);
+        T length = std::sqrt(x * x + y * y);
         return {x / length, y / length};
     }
 
-    double distance(const Vector2D& other) const {
+    T distance(const Vector2D& other) const {
         return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
     }
 };
