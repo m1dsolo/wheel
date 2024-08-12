@@ -58,6 +58,10 @@ struct Rect {
         return os << "(" << rect.x0 << ", " << rect.y0 << ", " << rect.x1 << ", " << rect.y1 << ")";
     }
 
+    bool operator==(const Rect<T>& rect) {
+        return x0 == rect.x0 && y0 == rect.y0 && x1 == rect.x1 && y1 == rect.y1;
+    }
+
     T intersection(const Rect<T>& other) {
         T x0 = std::max(this->x0, other.x0);
         T y0 = std::max(this->y0, other.y0);
@@ -72,6 +76,10 @@ struct Rect {
     bool contains(const Vector2D<T>& point) const {
         return x0 <= point.x && point.x <= x1 && y0 <= point.y && point.y <= y1;
     }
+
+    bool contains(const Rect<T>& rect) const {
+        return x0 <= rect.x0 && y0 <= rect.y0 && x1 >= rect.x1 && y1 >= rect.y1;
+    }
     
     bool is_overlapping(const Rect<T>& other) const {
         return x0 < other.x1 && x1 > other.x0 && y0 < other.y1 && y1 > other.y0;
@@ -82,8 +90,9 @@ struct Rect {
         return {static_cast<U>(x0), static_cast<U>(y0), static_cast<U>(x1), static_cast<U>(y1)};
     }
 
-    std::pair<T, T> center() const { return {(x0 + x1) / 2, (y0 + y1) / 2}; }
-    std::pair<T, T> size() const { return {x1 - x0, y1 - y0}; } 
+    Vector2D<T> center() const { return {(x0 + x1) / 2, (y0 + y1) / 2}; }
+    Vector2D<T> left_top() const { return {x0, y0}; }
+    Vector2D<T> size() const { return {x1 - x0, y1 - y0}; } 
 
     T x0 = 0;
     T y0 = 0;
