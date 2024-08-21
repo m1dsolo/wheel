@@ -41,7 +41,7 @@ public:
     // cnt: -1 for infinite
     template <typename F>
     void add(timer_t interval_us, int cnt, F&& f, bool immediately = false) {
-        Log::assert(interval_us > 0, "interval_us must be positive");
+        Log::assert_(interval_us > 0, "interval_us must be positive");
         auto func = [f = std::forward<F>(f)](int cnt) -> std::any {
             if constexpr (std::is_same_v<Utils::get_callable_return_type<F>, void>) {
                 if constexpr (std::is_invocable_v<F, int>) {

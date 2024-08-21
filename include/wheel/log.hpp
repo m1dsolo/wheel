@@ -50,7 +50,7 @@ public:
         return log(LogLevel::FATAL, fmt, std::forward<Args>(args)...);
     }
     template <typename ...Args>
-    static void assert(bool condition, with_source_location_<std::format_string<Args...>> fmt, Args&& ...args) {
+    static void assert_(bool condition, with_source_location_<std::format_string<Args...>> fmt, Args&& ...args) {
         if (!condition) {
             log(LogLevel::ERROR, fmt, std::forward<Args>(args)...);
             exit(1);
@@ -80,14 +80,14 @@ public:
         return log(LogLevel::FATAL, val, loc);
     }
     template <typename T>
-    static void assert(bool condition, const T& val, std::source_location loc = std::source_location::current()) {
+    static void assert_(bool condition, const T& val, std::source_location loc = std::source_location::current()) {
         if (!condition) {
             log(LogLevel::ERROR, val, loc);
             exit(1);
         }
     }
     template <typename F> requires std::invocable<F> && std::convertible_to<std::invoke_result_t<F>, std::string>
-    static void assert(bool condition, const F& f, std::source_location loc = std::source_location::current()) {
+    static void assert_(bool condition, const F& f, std::source_location loc = std::source_location::current()) {
         if (!condition) {
             log(LogLevel::ERROR, f(), loc);
             exit(1);
