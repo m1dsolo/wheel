@@ -17,15 +17,15 @@ public:
         : node_rect_(rect), get_rect_(get_rect), threshold_(threshold), max_depth_(max_depth), root_(std::make_unique<Node>()) {}
 
     void add(const T& value) {
-        return add(root_.get(), node_rect_, get_rect(value), value, 0);
+        return add(root_.get(), node_rect_, get_rect_(value), value, 0);
     }
 
     void remove(const T& value) {
-        remove(root_.get(), node_rect_, get_rect(value), value);
+        remove(root_.get(), node_rect_, get_rect_(value), value);
     }
 
     std::vector<T> query(const T& value) const {
-        return query(get_rect(value));
+        return query(get_rect_(value));
     }
 
     std::vector<T> query(const Rect<float>& rect) const {
@@ -46,7 +46,7 @@ private:
         std::vector<T> values;
     };
 
-    const Rect<float>& node_rect_;
+    Rect<float> node_rect_;
     const int threshold_;
     const int max_depth_;
     std::unique_ptr<Node> root_;
@@ -76,22 +76,24 @@ private:
 
     int get_quadrant(const Rect<float>& node_rect, const Rect<float>& input_rect) const {
         auto [x, y] = node_rect.center();
+        auto [x0, y0, x1, y1] = input_rect;
+
         // left
-        if (input_rect.x1 < x) {
+        if (x1 < x) {
             // top
-            if (input_rect.y1 < y) {
+            if (y1 < y) {
                 return 0;
             // bottom
-            } else if (input_rect.y0 >= y) {
+            } else if (y0 > y) {
                 return 2;
             }
         // right
-        } else {
+        } else if (x0 > x) {
             // top
-            if (input_rect.y1 < y) {
+            if (y1 < y) {
                 return 1;
             // bottom
-            } else if (input_rect.y0 >= y) {
+            } else if (y0 > y) {
                 return 3;
             }
         }
@@ -123,7 +125,7 @@ private:
         for (auto& child : node->children) {
             child = std::make_unique<Node>();
         }
-        auto new_values = std::vector<Rect<float>>{};
+        auto new_values = std::vector<T>{};
         for (const auto& value : node->values) {
             int i = get_quadrant(node_rect, get_rect_(value));
             if (i != -1) {
@@ -143,7 +145,7 @@ private:
         } else {
             int i = get_quadrant(node_rect, input_rect);
             if (i != -1) {
-                if (remove(node->children[i].get(), calc_child_rect(node_rect, i), input_rect)) {
+                if (remove(node->children[i].get(), calc_child_rect(node_rect, i), input_rect, value)) {
                     return try_merge(node);
                 }
             } else {
@@ -151,6 +153,7 @@ private:
                 return false;
             }
         }
+        return false;
     }
 
     void remove_value(Node* node, const T& value) {
@@ -184,8 +187,7 @@ private:
     }
 
     void query(Node* node, const Rect<float>& node_rect, const Rect<float>& input_rect, std::vector<T>& values) const {
-        // std::cout << "query: " << node_rect << " " << input_rect << std::endl;
-        Log::assert_(node && input_rect.is_overlapping(node_rect_), "query get_rect(value) is not overlapping with node_rect_");
+        Log::assert_(node && input_rect.is_overlapping(node_rect), "query get_rect(value) is not overlapping with node_rect");
         for (const auto& value : node->values) {
             if (input_rect.is_overlapping(get_rect_(value))) {
                 values.emplace_back(value);
@@ -193,7 +195,7 @@ private:
         }
         if (!is_leaf(node)) {
             for (int i = 0; i < 4; i++) {
-                auto child_rect = calc_child_rect(node_rect_, i);
+                auto child_rect = calc_child_rect(node_rect, i);
                 if (input_rect.is_overlapping(child_rect)) {
                     query(node, child_rect, input_rect, values);
                 }
@@ -222,7 +224,7 @@ private:
         }
     }
 
-    void find_descendant_intersections(Node* node, const T& value, std::vector<std::pair<T, T>>& intersections) {
+    void find_descendant_intersections(Node* node, const T& value, std::vector<std::pair<T, T>>& intersections) const {
         for (const auto& other : node->values) {
             if (get_rect_(value).is_overlapping(get_rect_(other))) {
                 intersections.emplace_back(value, other);

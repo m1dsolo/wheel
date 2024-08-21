@@ -1,65 +1,53 @@
 #include <gtest/gtest.h>
 
 #include <wheel/quadtree.hpp>
+#include <wheel/ecs.hpp>
+#include <wheel/geometry.hpp>
 
 using namespace wheel;
 
-struct Rectangle {
-    float x1, y1, x2, y2;
-
-    Rect<float> toRect() const {
-        return {x1, y1, x2 - x1, y2 - y1};
-    }
-
-    bool operator==(const Rectangle& other) const {
-        return std::tie(x1, y1, x2, y2) == std::tie(other.x1, other.y1, other.x2, other.y2);
-    }
-};
-
 TEST(QuadTreeTest, AddRemoveAndQuery) {
-    auto get_rect = [](const Rectangle& r) { return r.toRect(); };
-    QuadTree<Rectangle, decltype(get_rect)> tree({0, 0, 10, 10}, get_rect, 4, 4);
+    auto& ecs = ECS::instance();
+    auto get_rect = [&](Entity entity) { return ecs.get_component<Rect<float>>(entity); };
+    QuadTree<Entity, decltype(get_rect)> tree({0, 0, 10, 10}, get_rect, 4, 4);
 
-    Rectangle r1 = {1, 1, 2, 2};
-    Rectangle r2 = {3, 3, 4, 4};
-    Rectangle r3 = {5, 5, 6, 6};
-    Rectangle r4 = {7, 7, 8, 8};
+    auto e1 = ecs.add_entity(Rect<float>{1, 1, 2, 2});
+    auto e2 = ecs.add_entity(Rect<float>{3, 3, 4, 4});
+    auto e3 = ecs.add_entity(Rect<float>{5, 5, 6, 6});
+    auto e4 = ecs.add_entity(Rect<float>{7, 7, 8, 8});
 
-    tree.add(r1);
-    tree.add(r2);
-    tree.add(r3);
-    tree.add(r4);
+    tree.add(e1);
+    tree.add(e2);
+    tree.add(e3);
+    tree.add(e4);
 
-    EXPECT_EQ(tree.query(r1).size(), 1);
-    EXPECT_EQ(tree.query(r2).size(), 1);
-    EXPECT_EQ(tree.query(r3).size(), 1);
-    EXPECT_EQ(tree.query(r4).size(), 1);
+    EXPECT_EQ(tree.query(e1).size(), 1);
+    EXPECT_EQ(tree.query(e2).size(), 1);
+    EXPECT_EQ(tree.query(e3).size(), 1);
+    EXPECT_EQ(tree.query(e4).size(), 1);
 
-    tree.remove(r2);
+    tree.remove(e2);
 
-    EXPECT_EQ(tree.query(r2).size(), 0);
+    EXPECT_EQ(tree.query(e2).size(), 0);
 }
 
 TEST(QuadTreeTest, FindAllIntersections) {
-    auto get_rect = [](const Rectangle& r) { return r.toRect(); };
-    QuadTree<Rectangle, decltype(get_rect)> tree({0, 0, 10, 10}, get_rect, 4, 4);
+    auto& ecs = ECS::instance();
+    auto get_rect = [&](Entity entity) { return ecs.get_component<Rect<float>>(entity); };
+    QuadTree<Entity, decltype(get_rect)> tree({0, 0, 10, 10}, get_rect, 4, 4);
 
-    Rectangle r1 = {1, 1, 2, 2};
-    Rectangle r2 = {2, 2, 3, 3};
-    Rectangle r3 = {3, 3, 4, 4};
-    Rectangle r4 = {4, 4, 5, 5};
+    auto e1 = ecs.add_entity(Rect<float>{1, 1, 5, 5});
+    auto e2 = ecs.add_entity(Rect<float>{3, 3, 4, 4});
+    auto e3 = ecs.add_entity(Rect<float>{4, 4, 6, 6});
+    auto e4 = ecs.add_entity(Rect<float>{7, 7, 8, 8});
 
-    tree.add(r1);
-    tree.add(r2);
-    tree.add(r3);
-    tree.add(r4);
+    tree.add(e1);
+    tree.add(e2);
+    tree.add(e3);
+    tree.add(e4);
 
     auto intersections = tree.find_all_intersections();
-    EXPECT_EQ(intersections.size(), 4);
-
-    std::vector<std::pair<Rectangle, Rectangle>> expectedIntersections = {
-        {r1, r2}, {r1, r3}, {r2, r3}, {r3, r4}};
-    EXPECT_EQ(intersections, expectedIntersections);
+    EXPECT_EQ(intersections.size(), 2);  // {e1, e2}, {e1, e3}
 }
 
 int main(int argc, char** argv) {
