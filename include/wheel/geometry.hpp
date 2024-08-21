@@ -91,7 +91,7 @@ struct Rect {
     }
 
     bool is_zero() const {
-        return x0 == 0 && y0 == 0 && x1 == 0 && y1 == 0;
+        return *this == Rect<T>{};
     }
 
     template <typename U>

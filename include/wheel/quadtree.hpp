@@ -49,6 +49,10 @@ public:
         }
     }
 
+    void print() {
+        print(root_.get(), node_rect_, "");
+    }
+
     std::vector<std::pair<T, T>> find_all_intersections() {
         auto intersections = std::vector<std::pair<T, T>>{};
         find_all_intersections(root_.get(), intersections);
@@ -77,19 +81,20 @@ private:
     Rect<float> calc_child_rect(const Rect<float>& rect, int i) const {
         auto [x, y] = rect.left_top();
         auto [w, h] = rect.size() / 2;
+        float x0, y0;
         switch (i) {
             // left top
-            case 0: return Rect<float>{x, y, w, h};
+            case 0: x0 = x, y0 = y; break;
             // right top
-            case 1: return Rect<float>{x + w, y, w, h};
+            case 1: x0 = x + w, y0 = y; break;
             // left bottom
-            case 2: return Rect<float>{x, y + h, w, h};
+            case 2: x0 = x, y0 = y + h; break;
             // right bottom
-            case 3: return Rect<float>{x + w, y + h, w, h};
+            case 3: x0 = x + w, y0 = y + h; break;
             // wrong
             default: Log::assert_(false, "calc_child_rect invalid index");
         }
-        return {};
+        return Rect<float>{x0, y0, x0 + w, y0 + h};
     }
 
     int get_quadrant(const Rect<float>& node_rect, const Rect<float>& input_rect) const {
@@ -215,8 +220,30 @@ private:
             for (int i = 0; i < 4; i++) {
                 auto child_rect = calc_child_rect(node_rect, i);
                 if (input_rect.is_overlapping(child_rect)) {
-                    query(node, child_rect, input_rect, values);
+                    query(node->children[i].get(), child_rect, input_rect, values);
                 }
+            }
+        }
+    }
+
+    void print(Node* node, const Rect<float>& node_rect, const std::string& indent) {
+        if (node == nullptr) {
+            return;
+        }
+
+        // Print the node
+        std::cout << indent << node_rect << " values:[";
+        for (const auto& value : node->values) {
+            std::cout << get_rect_(value) << " ";
+        }
+        std::cout << "]\n";
+
+        // If this is not a leaf node, print its children
+        if (!is_leaf(node)) {
+            for (int i = 0; i < 4; i++) {
+                std::cout << indent << "Child " << i << ":\n";
+                auto child_rect = calc_child_rect(node_rect, i);
+                print(node->children[i].get(), child_rect, indent + "  ");
             }
         }
     }
