@@ -6,10 +6,12 @@
 
 #include <array>
 #include <vector>
+#include <unordered_set>
 #include <memory>
 
 namespace wheel {
 
+// T should be hashable(stored in std::unordered_set for update)
 template <typename T, typename GetRect>
 class QuadTree {
 public:
@@ -17,11 +19,17 @@ public:
         : node_rect_(rect), get_rect_(get_rect), threshold_(threshold), max_depth_(max_depth), root_(std::make_unique<Node>()) {}
 
     void add(const T& value) {
-        return add(root_.get(), node_rect_, get_rect_(value), value, 0);
+        if (!values_.count(value)) {
+            values_.emplace(value);
+            return add(root_.get(), node_rect_, get_rect_(value), value, 0);
+        }
     }
 
     void remove(const T& value) {
-        remove(root_.get(), node_rect_, get_rect_(value), value);
+        if (values_.count(value)) {
+            values_.erase(value);
+            remove(root_.get(), node_rect_, get_rect_(value), value);
+        }
     }
 
     std::vector<T> query(const T& value) const {
@@ -34,11 +42,20 @@ public:
         return values;
     }
 
+    void update() {
+        root_ = std::make_unique<Node>();
+        for (const auto& value : values_) {
+            add(root_.get(), node_rect_, get_rect_(value), value, 0);
+        }
+    }
+
     std::vector<std::pair<T, T>> find_all_intersections() {
         auto intersections = std::vector<std::pair<T, T>>{};
         find_all_intersections(root_.get(), intersections);
         return intersections;
     }
+
+    size_t size() const { return values_.size(); }
 
 private:
     struct Node {
@@ -51,6 +68,7 @@ private:
     const int max_depth_;
     std::unique_ptr<Node> root_;
     GetRect get_rect_;
+    std::unordered_set<T> values_;
 
     bool is_leaf(const Node* node) const {
         return !static_cast<bool>(node->children[0]);
@@ -204,7 +222,7 @@ private:
     }
 
     void find_all_intersections(Node* node, std::vector<std::pair<T, T>>& intersections) const {
-        for (int i = 0; i < node->values.size(); i++) {
+        for (int i = 1; i < node->values.size(); i++) {
             for (int j = 0; j < i; j++) {
                 const auto& vi = node->values[i], vj = node->values[j];
                 if (get_rect_(vi).is_overlapping(get_rect_(vj))) {

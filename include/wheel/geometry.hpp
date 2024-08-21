@@ -90,6 +90,10 @@ struct Rect {
         return x0 < other.x1 && x1 > other.x0 && y0 < other.y1 && y1 > other.y0;
     }
 
+    bool is_zero() const {
+        return x0 == 0 && y0 == 0 && x1 == 0 && y1 == 0;
+    }
+
     template <typename U>
     operator Rect<U>() const {
         return {static_cast<U>(x0), static_cast<U>(y0), static_cast<U>(x1), static_cast<U>(y1)};
@@ -103,7 +107,6 @@ struct Rect {
     T y0 = 0;
     T x1 = 0;
     T y1 = 0;
-
 };
 
 }  // namespace wheel
