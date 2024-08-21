@@ -23,6 +23,11 @@ struct Vector2D {
     bool is_zero() const { return x == 0 && y == 0; }
     friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << "(" << v.x << ", " << v.y << ")"; }
 
+    template <typename U>
+    operator Vector2D<U>() const {
+        return {static_cast<U>(x), static_cast<U>(y)};
+    }
+
     Vector2D& clamp(T x_min, T x_max, T y_min, T y_max) {
         x = std::clamp(x, x_min, x_max);
         y = std::clamp(y, y_min, y_max);

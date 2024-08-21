@@ -210,6 +210,11 @@ public:
     }
 
     template <typename... ComponentTypes>
+    auto get_components(Entity entity) {
+        return std::make_tuple(std::ref(get_component<ComponentTypes>(entity))...);
+    }
+
+    template <typename... ComponentTypes>
     auto get_entity_and_components() {
         auto entities = get_entities<ComponentTypes...>();
         return std::views::zip(
