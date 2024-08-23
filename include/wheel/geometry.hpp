@@ -8,7 +8,7 @@ namespace wheel {
 
 template <typename T>
 struct Vector2D {
-    T x, y;
+    T x = 0, y = 0;
 
     Vector2D operator+(const Vector2D& other) const { return { x + other.x, y + other.y }; }
     Vector2D operator-(const Vector2D& other) const { return { x - other.x, y - other.y }; }
@@ -92,6 +92,14 @@ struct Rect {
 
     bool is_zero() const {
         return *this == Rect<T>{};
+    }
+
+    Rect<T> merge(const Rect<T>& other) const {
+        T new_x0 = std::min(this->x0, other.x0);
+        T new_y0 = std::min(this->y0, other.y0);
+        T new_x1 = std::max(this->x1, other.x1);
+        T new_y1 = std::max(this->y1, other.y1);
+        return {new_x0, new_y0, new_x1, new_y1};
     }
 
     template <typename U>
