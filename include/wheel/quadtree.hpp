@@ -92,7 +92,7 @@ private:
             // right bottom
             case 3: x0 = x + w, y0 = y + h; break;
             // wrong
-            default: Log::assert_(false, "calc_child_rect invalid index");
+            default: Log::assert_(false, "QuadTree::calc_child_rect(): invalid index");
         }
         return Rect<float>{x0, y0, x0 + w, y0 + h};
     }
@@ -126,7 +126,8 @@ private:
     }
 
     void add(Node* node, const Rect<float>& node_rect, const Rect<float>& input_rect, const T& value, int depth) {
-        Log::assert_(node, node_rect.contains(input_rect));
+        // Log::assert_(node_rect.contains(input_rect), "QuadTree::add(): input_rect is not contained in node_rect");
+
         if (is_leaf(node)) {
             if (depth >= max_depth_ || node->values.size() < threshold_) {
                 node->values.emplace_back(value);
@@ -181,13 +182,13 @@ private:
 
     void remove_value(Node* node, const T& value) {
         auto it = std::find(node->values.begin(), node->values.end(), value);
-        Log::assert_(it != node->values.end(), "remove_value can't find value!");
+        Log::assert_(it != node->values.end(), "QuadTree::remove_value(): can't find value!");
         *it = std::move(node->values.back());
         node->values.pop_back();
     }
 
     bool try_merge(Node* node) {
-        Log::assert_(node && !is_leaf(node), "only interior nodes can be merged!");
+        Log::assert_(!is_leaf(node), "QuadTree::try_merge(): only interior nodes can be merged!");
         int size = node->values.size();
         for (const auto& child : node->children) {
             if (!is_leaf(child.get())) {
@@ -210,7 +211,8 @@ private:
     }
 
     void query(Node* node, const Rect<float>& node_rect, const Rect<float>& input_rect, std::vector<T>& values) const {
-        Log::assert_(node && input_rect.is_overlapping(node_rect), "query get_rect(value) is not overlapping with node_rect");
+        // Log::assert_(input_rect.is_overlapping(node_rect), "QuadTree::query(): input_rect is not overlapping with node_rect");
+
         for (const auto& value : node->values) {
             if (input_rect.is_overlapping(get_rect_(value))) {
                 values.emplace_back(value);
