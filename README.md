@@ -34,6 +34,7 @@ The code structure is clear and easy to read.
 13. ObjectPool: Object pool.
 14. ECS: Entity-Component-System.
 15. geometry: Geometry calculation.
+16. QuadTree: Quad tree.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.
