@@ -5,7 +5,12 @@
 
 namespace wheel {
 
-timer_t Timer::tick() const {
+void Timer::add(time_t interval_us,  timer_func_t func) {
+    assert(interval_us >= 0);
+    nodes_.emplace(tick() + interval_us, func);
+}
+
+time_t Timer::tick() const {
     auto now = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::steady_clock::now());
     auto dur = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
     return dur.count();
@@ -20,47 +25,44 @@ void Timer::pause() {
 
 void Timer::resume() {
     if (pause_) {
-        timer_t pause_duration = tick() - pause_start_tick_;
-        std::priority_queue<TimerNode, std::vector<TimerNode>, std::greater<TimerNode>> tmp;
+        time_t pause_duration = tick() - pause_start_tick_;
+        std::priority_queue<Node, std::vector<Node>, std::greater<Node>> tmp;
         while (!nodes_.empty()) {
-            TimerNode node = nodes_.top();
-            nodes_.pop();
+            Node node = std::move(nodes_.top()); nodes_.pop();
             node.expire_time += pause_duration;
-            tmp.push(node);
+            tmp.emplace(node);
         }
         nodes_ = std::move(tmp);
         pause_ = false;
     }
 }
 
-std::any Timer::update() {
+std::optional<timer_id_t> Timer::update() {
     if (pause_ || nodes_.empty()) {
-        return {};
+        return std::nullopt;
     }
 
-    while (!nodes_.empty() && tick() >= nodes_.top().expire_time) {
-        TimerNode node = nodes_.top();
-        nodes_.pop();
-        std::any res = node.func(node.cnt);
-        if (node.cnt == -1 || --node.cnt > 0) {
-            node.expire_time = tick() + node.interval;
-            nodes_.push(node);
+    auto cur = tick();
+    if (cur >= nodes_.top().expire_time) {
+        Node node = std::move(nodes_.top()); nodes_.pop();
+        auto interval = node.func();
+        if (interval > 0) {
+            node.expire_time = cur + interval;
+            nodes_.emplace(node);
         }
-        return res;
+        return node.id;
     }
-    return {};
+    return std::nullopt;
 }
 
-timer_t Timer::time_to_sleep() const {
+time_t Timer::time_util_next() const {
     if (pause_ || nodes_.empty()) {
-        return NO_SLEEP;
+        return -1;
     }
-
-    TimerNode node = nodes_.top();
-    return node.expire_time >= tick() ? node.expire_time - tick() : 0;
+    return std::max(static_cast<time_t>(0), nodes_.top().expire_time - tick());
 }
 
-void Timer::sleep(timer_t us) const {
+void Timer::sleep(time_t us) const {
     std::this_thread::sleep_for(std::chrono::microseconds(us));
 }
 

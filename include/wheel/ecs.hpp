@@ -128,18 +128,24 @@ public:
     template <typename... ComponentTypes>
     std::vector<Entity> get_entities() const {
         std::vector<Entity> res;
-        bool first = true;
-        for (const ComponentID& component_id : {static_cast<ComponentID>(typeid(ComponentTypes))...}) {
-            std::vector<Entity> null_entities;
-            std::vector<Entity>& entities = null_entities;
-            if (component2entities_.count(component_id)) {
-                entities = component2entities_.at(component_id).entities();
+        if constexpr (sizeof...(ComponentTypes) == 0) {
+            for (const auto& [entity, _] : entity2components_) {
+                res.emplace_back(entity);
             }
-            if (first) {
-                res = entities;
-                first = false;
-            } else {
-                res = Utils::intersection(res, entities);
+        } else {
+            bool first = true;
+            for (const ComponentID& component_id : {static_cast<ComponentID>(typeid(ComponentTypes))...}) {
+                std::vector<Entity> null_entities;
+                std::vector<Entity>& entities = null_entities;
+                if (component2entities_.count(component_id)) {
+                    entities = component2entities_.at(component_id).entities();
+                }
+                if (first) {
+                    res = entities;
+                    first = false;
+                } else {
+                    res = Utils::intersection(res, entities);
+                }
             }
         }
 
