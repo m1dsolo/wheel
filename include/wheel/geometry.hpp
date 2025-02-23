@@ -10,16 +10,28 @@ template <typename T>
 struct Vector2D {
     T x = 0, y = 0;
 
-    Vector2D operator+(const Vector2D& other) const { return { x + other.x, y + other.y }; }
-    Vector2D operator-(const Vector2D& other) const { return { x - other.x, y - other.y }; }
+    Vector2D operator+(T scalar) const { return { x + scalar, y + scalar }; }
+    Vector2D operator-(T scalar) const { return { x - scalar, y - scalar }; }
     Vector2D operator*(T scalar) const { return { x * scalar, y * scalar}; }
     Vector2D operator/(T scalar) const { return { x / scalar, y / scalar}; }
-    Vector2D& operator+=(const Vector2D& other) { x += other.x; y += other.y; return *this; }
-    Vector2D& operator-=(const Vector2D& other) { x -= other.x; y -= other.y; return *this; }
+    Vector2D& operator+=(T scalar) { x += scalar; y += scalar; return *this; }
+    Vector2D& operator-=(T scalar) { x -= scalar; y -= scalar; return *this; }
     Vector2D& operator*=(T scalar) { x *= scalar; y *= scalar; return *this; }
     Vector2D& operator/=(T scalar) { x /= scalar; y /= scalar; return *this; }
+    bool operator==(T scalar) const { return x == scalar && y == scalar; }
+    bool operator!=(T scalar) const { return x != scalar || y != scalar; }
+
+    Vector2D operator+(const Vector2D& other) const { return { x + other.x, y + other.y }; }
+    Vector2D operator-(const Vector2D& other) const { return { x - other.x, y - other.y }; }
+    Vector2D operator*(const Vector2D& other) const { return { x * other.x, y * other.y }; }
+    Vector2D operator/(const Vector2D& other) const { return { x / other.x, y / other.y }; }
+    Vector2D& operator+=(const Vector2D& other) { x += other.x; y += other.y; return *this; }
+    Vector2D& operator-=(const Vector2D& other) { x -= other.x; y -= other.y; return *this; }
+    Vector2D& operator*=(const Vector2D& other) { x *= other.x; y *= other.y; return *this; }
+    Vector2D& operator/=(const Vector2D& other) { x /= other.x; y /= other.y; return *this; }
     bool operator==(const Vector2D& other) const { return x == other.x && y == other.y; }
     bool operator!=(const Vector2D& other) const { return x != other.x || y != other.y; }
+
     bool is_zero() const { return x == 0 && y == 0; }
     friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << "(" << v.x << ", " << v.y << ")"; }
 
