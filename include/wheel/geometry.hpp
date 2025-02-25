@@ -3,12 +3,20 @@
 #include <algorithm>
 #include <cmath>
 #include <ostream>
+#include <utility>
 
 namespace wheel {
 
 template <typename T>
 struct Vector2D {
-    T x = 0, y = 0;
+    T x, y;
+
+    Vector2D(T x = 0, T y = 0) : x(x), y(y) {}
+    Vector2D(const std::pair<T, T>& p) : x(p.first), y(p.second) {}
+    Vector2D(const Vector2D& other) : x(other.x), y(other.y) {}
+    Vector2D(Vector2D&& other) : x(other.x), y(other.y) {}
+    Vector2D& operator=(const Vector2D& other) { x = other.x; y = other.y; return *this; }
+    Vector2D& operator=(Vector2D&& other) { x = other.x; y = other.y; return *this; }
 
     Vector2D operator+(T scalar) const { return { x + scalar, y + scalar }; }
     Vector2D operator-(T scalar) const { return { x - scalar, y - scalar }; }
@@ -33,7 +41,6 @@ struct Vector2D {
     bool operator!=(const Vector2D& other) const { return x != other.x || y != other.y; }
 
     bool is_zero() const { return x == 0 && y == 0; }
-    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << "(" << v.x << ", " << v.y << ")"; }
 
     template <typename U>
     operator Vector2D<U>() const {
@@ -57,6 +64,22 @@ struct Vector2D {
 
     T distance(const Vector2D& other) const {
         return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+    }
+
+    std::string to_string() const { return "[" + std::to_string(x) + "," + std::to_string(y) + "]"; }
+    static Vector2D from_string(const std::string& str) {
+        size_t pos = str.find(',');
+        return {
+            std::stof(str.substr(1, pos - 1)),
+            std::stof(str.substr(pos + 1, str.size() - pos - 2))
+        };
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << v.to_string(); }
+    friend std::istream& operator>>(std::istream& is, Vector2D& v) {
+        std::string str;
+        is >> str;
+        v.from_string(str);
+        return is;
     }
 };
 
