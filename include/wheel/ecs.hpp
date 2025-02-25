@@ -24,7 +24,10 @@ inline constexpr Entity EntityNone = -1;
 class EntityGenerator {
 public:
     EntityGenerator() = default;
+
     static Entity generate();
+    static Entity next_entity() { return next_entity_; }
+    static void set_next_entity(Entity entity) { next_entity_ = entity; }
 
 private:
     static inline Entity next_entity_ = 0;
@@ -62,6 +65,9 @@ public:
 
     template <typename... ComponentTypes>
     Entity add_entity(ComponentTypes&&... components);
+
+    template <typename... ComponentTypes>
+    Entity add_entity(Entity entity, ComponentTypes&&... components);
 
     void del_entity(Entity entity);
     bool has_entity(Entity entity) const;
@@ -127,6 +133,9 @@ public:
     void add_startup_system(const System& system);
     void add_system(const System& system);
     void add_shutdown_system(const System& system);
+    
+    void clear_entities();
+    void clear_systems();
 
 private:
     template <typename ComponentType>
@@ -177,14 +186,8 @@ inline void ECS::shutdown() {
     for (auto& system : shutdown_systems_) {
         system();
     }
-
-    entity2components_.clear();
-    component2entities_.clear();
-    component2containers_.clear();
-
-    startup_systems_.clear();
-    systems_.clear();
-    shutdown_systems_.clear();
+    clear_systems();
+    clear_entities();
 }
 
 inline Entity ECS::add_entity(EntityTemplate& component_map) {
@@ -197,9 +200,15 @@ inline Entity ECS::add_entity(EntityTemplate& component_map) {
 
 template <typename... ComponentTypes>
 inline Entity ECS::add_entity(ComponentTypes&&... components) {
-    Entity entity = EntityGenerator::generate();
-    add_components(entity, std::forward<ComponentTypes>(components)...);
+    return add_entity(EntityGenerator::generate(), std::forward<ComponentTypes>(components)...);
+}
 
+template <typename... ComponentTypes>
+Entity ECS::add_entity(Entity entity, ComponentTypes&&... components) {
+    EntityGenerator::set_next_entity(std::max(EntityGenerator::next_entity(), entity + 1));
+    if constexpr (sizeof...(ComponentTypes) > 0) {
+        add_components(entity, std::forward<ComponentTypes>(components)...);
+    }
     return entity;
 }
 
@@ -340,11 +349,11 @@ inline auto ECS::get_components() {
     auto entities = get_entities<ComponentTypes...>();
     return std::views::zip(
         std::vector<Entity>(entities) |
-        std::views::transform([&](Entity entity) -> std::any& {
+        std::views::transform( [&](Entity entity) -> std::any& {
             size_t idx = entity2components_.at(entity).at(typeid(ComponentTypes));
             return component2containers_.at(typeid(ComponentTypes)).components.at(idx);
         }) |
-        std::views::transform([](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component); })
+        std::views::transform( [](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component) ; })
     ...);
 }
 
@@ -359,11 +368,11 @@ inline auto ECS::get_entity_and_components() {
     return std::views::zip(
         std::vector<Entity>(entities),
         std::vector<Entity>(entities) |
-        std::views::transform([&](Entity entity) -> std::any& {
+        std::views::transform( [&](Entity entity) -> std::any& {
             size_t idx = entity2components_.at(entity).at(typeid(ComponentTypes));
             return component2containers_.at(typeid(ComponentTypes)).components.at(idx);
         }) |
-        std::views::transform([](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component); })
+        std::views::transform( [](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component) ; })
     ...);
 }
 
@@ -377,6 +386,19 @@ inline void ECS::add_system(const System& system) {
 
 inline void ECS::add_shutdown_system(const System& system) {
     shutdown_systems_.emplace_back(system);
+}
+
+inline void ECS::clear_entities() {
+    entity2components_.clear();
+    component2entities_.clear();
+    component2containers_.clear();
+    EntityGenerator::set_next_entity(0);
+}
+
+inline void ECS::clear_systems() {
+    startup_systems_.clear();
+    systems_.clear();
+    shutdown_systems_.clear();
 }
 
 template <typename ComponentType>
