@@ -4,7 +4,7 @@
 
 namespace wheel {
 
-TEST(ThreadPool, Basic) {
+TEST(ThreadPoolTest, Basic) {
     wheel::ThreadPool thread_pool(4);
 
     std::vector<std::future<int>> futures;
