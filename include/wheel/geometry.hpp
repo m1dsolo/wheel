@@ -7,63 +7,71 @@
 
 namespace wheel {
 
+// Copy assignment, so it is recommended that T be a small object
 template <typename T>
 struct Vector2D {
     T x, y;
 
     Vector2D(T x = 0, T y = 0) : x(x), y(y) {}
-    Vector2D(const std::pair<T, T>& p) : x(p.first), y(p.second) {}
     Vector2D(const Vector2D& other) : x(other.x), y(other.y) {}
     Vector2D(Vector2D&& other) : x(other.x), y(other.y) {}
-    Vector2D& operator=(const Vector2D& other) { x = other.x; y = other.y; return *this; }
-    Vector2D& operator=(Vector2D&& other) { x = other.x; y = other.y; return *this; }
 
-    Vector2D operator+(T scalar) const { return { x + scalar, y + scalar }; }
-    Vector2D operator-(T scalar) const { return { x - scalar, y - scalar }; }
-    Vector2D operator*(T scalar) const { return { x * scalar, y * scalar}; }
-    Vector2D operator/(T scalar) const { return { x / scalar, y / scalar}; }
-    Vector2D& operator+=(T scalar) { x += scalar; y += scalar; return *this; }
-    Vector2D& operator-=(T scalar) { x -= scalar; y -= scalar; return *this; }
-    Vector2D& operator*=(T scalar) { x *= scalar; y *= scalar; return *this; }
-    Vector2D& operator/=(T scalar) { x /= scalar; y /= scalar; return *this; }
-    bool operator==(T scalar) const { return x == scalar && y == scalar; }
-    bool operator!=(T scalar) const { return x != scalar || y != scalar; }
+    Vector2D(std::pair<T, T> p) : x(p.first), y(p.second) {}
+    // template <typename U> requires std::is_convertible_v<U, T>
+    // operator Vector2D<U>() const { return {static_cast<U>(x), static_cast<U>(y)}; }
 
-    Vector2D operator+(const Vector2D& other) const { return { x + other.x, y + other.y }; }
-    Vector2D operator-(const Vector2D& other) const { return { x - other.x, y - other.y }; }
-    Vector2D operator*(const Vector2D& other) const { return { x * other.x, y * other.y }; }
-    Vector2D operator/(const Vector2D& other) const { return { x / other.x, y / other.y }; }
-    Vector2D& operator+=(const Vector2D& other) { x += other.x; y += other.y; return *this; }
-    Vector2D& operator-=(const Vector2D& other) { x -= other.x; y -= other.y; return *this; }
-    Vector2D& operator*=(const Vector2D& other) { x *= other.x; y *= other.y; return *this; }
-    Vector2D& operator/=(const Vector2D& other) { x /= other.x; y /= other.y; return *this; }
-    bool operator==(const Vector2D& other) const { return x == other.x && y == other.y; }
-    bool operator!=(const Vector2D& other) const { return x != other.x || y != other.y; }
+    Vector2D& operator=(Vector2D other) { x = other.x; y = other.y; return *this; }
 
-    bool is_zero() const { return x == 0 && y == 0; }
+    Vector2D operator+(this Vector2D self, Vector2D other) { return { self.x + other.x, self.y + other.y }; }
+    Vector2D operator-(this Vector2D self, Vector2D other) { return { self.x - other.x, self.y - other.y }; }
+    Vector2D operator*(this Vector2D self, Vector2D other) { return { self.x * other.x, self.y * other.y }; }
+    Vector2D operator/(this Vector2D self, Vector2D other) { return { self.x / other.x, self.y / other.y }; }
+    Vector2D& operator+=(Vector2D other) { x += other.x; y += other.y; return *this; }
+    Vector2D& operator-=(Vector2D other) { x -= other.x; y -= other.y; return *this; }
+    Vector2D& operator*=(Vector2D other) { x *= other.x; y *= other.y; return *this; }
+    Vector2D& operator/=(Vector2D other) { x /= other.x; y /= other.y; return *this; }
 
-    template <typename U>
-    operator Vector2D<U>() const {
-        return {static_cast<U>(x), static_cast<U>(y)};
+    bool operator<(this Vector2D self, Vector2D other) { return (self.x < other.x) && (self.y < other.y); }
+    bool operator>(this Vector2D self, Vector2D other) { return (self.x > other.x) && (self.y > other.y); }
+    bool operator<=(this Vector2D self, Vector2D other) { return (self.x <= other.x) && (self.y <= other.y); }
+    bool operator>=(this Vector2D self, Vector2D other) { return (self.x >= other.x) && (self.y >= other.y); }
+    bool operator==(this Vector2D self, Vector2D other) { return (self.x == other.x) && (self.y == other.y); }
+    bool operator!=(this Vector2D self, Vector2D other) { return (self.x != other.x) || (self.y != other.y); }
+
+    bool is_zero(this Vector2D self) { return self == 0; }
+
+    Vector2D clamp(this Vector2D self, T x_min, T x_max, T y_min, T y_max) {
+        return {
+            std::clamp(self.x, x_min, x_max),
+            std::clamp(self.y, y_min, y_max)
+        };
+    }
+    void clamp_(this Vector2D self, T x_min, T x_max, T y_min, T y_max) {
+        self.x = std::clamp(self.x, x_min, x_max);
+        self.y = std::clamp(self.y, y_min, y_max);
     }
 
-    Vector2D& clamp(T x_min, T x_max, T y_min, T y_max) {
-        x = std::clamp(x, x_min, x_max);
-        y = std::clamp(y, y_min, y_max);
-        return *this;
+    Vector2D normalize(this Vector2D self) {
+        if (self == 0) return self;
+        T length = std::sqrt(self.x * self.x + self.y * self.y);
+        return {self.x / length, self.y / length};
+    }
+    void normalize_(this Vector2D self) {
+        if (self == 0) return;
+        T length = std::sqrt(self.x * self.x + self.y * self.y);
+        self.x /= length;
+        self.y /= length;
     }
 
-    Vector2D normalize() {
-        if (x == 0 && y == 0) {
-            return *this;
-        }
-
-        T length = std::sqrt(x * x + y * y);
-        return {x / length, y / length};
+    T distance(this Vector2D self) {
+        return std::sqrt(self.x * self.x + self.y * self.y);
+    }
+    T distance(this Vector2D self, Vector2D other) {
+        return std::sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y));
     }
 
-    T distance(const Vector2D& other) const {
-        return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+    T abs(this Vector2D self) {
+        return std::abs(self.x) + std::abs(self.y);
     }
 
     std::string to_string() const { return "[" + std::to_string(x) + "," + std::to_string(y) + "]"; }
@@ -74,8 +82,8 @@ struct Vector2D {
             std::stof(str.substr(pos + 1, str.size() - pos - 2))
         };
     }
-    friend std::ostream& operator<<(std::ostream& os, const Vector2D& v) { return os << v.to_string(); }
-    friend std::istream& operator>>(std::istream& is, Vector2D& v) {
+    friend std::ostream& operator<<(std::ostream& os, Vector2D v) { return os << v.to_string(); }
+    friend std::istream& operator>>(std::istream& is, Vector2D v) {
         std::string str;
         is >> str;
         v.from_string(str);
