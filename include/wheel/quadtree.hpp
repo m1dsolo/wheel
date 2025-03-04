@@ -15,8 +15,10 @@ namespace wheel {
 template <typename T, typename GetRect>
 class QuadTree {
 public:
-    QuadTree(const Rect<float>& rect, const GetRect& get_rect, int threshold = 16, int max_depth = 8)
-        : node_rect_(rect), get_rect_(get_rect), threshold_(threshold), max_depth_(max_depth), root_(std::make_unique<Node>()) {}
+    QuadTree(int threshold = 16, int max_depth = 8)
+        : threshold_(threshold), max_depth_(max_depth), root_(std::make_unique<Node>()) {}
+    void set_rect(const Rect<float>& rect) { node_rect_ = rect; }
+    void set_get_rect(GetRect get_rect) { get_rect_ = get_rect; }
 
     void add(const T& value) {
         if (!values_.count(value)) {
@@ -60,6 +62,11 @@ public:
     }
 
     size_t size() const { return values_.size(); }
+
+    void clear() {
+        root_ = std::make_unique<Node>();
+        values_.clear();
+    }
 
 private:
     struct Node {
