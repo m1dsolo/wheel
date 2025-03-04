@@ -7,7 +7,7 @@
 
 ## Introduction
 
-A C++ library for various types of wheels(Based on c++20).
+A C++ library for various types of wheels(Based on c++23).
 This library is mainly written for learning purposes.
 The code structure is clear and easy to read.
 
@@ -19,13 +19,7 @@ The code structure is clear and easy to read.
 4. Log: for logging and assert.
 5. Socket: Encapsulation of `c` socket api.
 6. Epoll: Encapsulation of `c` epoll api.
-7. Server: Abstract server in reactor mode.
-
-    - [example/echo_server](./example/echo_server): A simple echo server.
-    - [example/chat_server](./example/chat_server): A simple chat server.
-
-        [chat_intro_video](https://github.com/m1dsolo/wheel/assets/74849775/664feba9-5724-4e6b-b46f-a330101b21fa)
-
+7. Server: Abstract server in reactor mode. (See [chat](https://github.com/m1dsolo/chat.git) for more info.)
 8. Singleton: Singleton base class.
 9. Csv: Read and parse csv file.
 10. Utils: Some useful functions.
@@ -35,6 +29,7 @@ The code structure is clear and easy to read.
 14. ECS: Entity-Component-System.
 15. geometry: Geometry calculation.
 16. QuadTree: Quad tree.
+17. RingBuffer: Ring buffer.
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.
@@ -43,32 +38,33 @@ I will update `wiki` in the future.
 
 Feel free to copy code into your project.
 
-### Use as `wheel` as a static library
+### Use `wheel` as a submodule
 
-Clone the repository and add it to your project.
+1. Add `wheel` to your project
+
 ```bash
-git clone https://github.com/m1dsolo/wheel.git
+git submodule add --depth=1 https://github.com/m1dsolo/wheel.git third_party/wheel
 ```
 
-Modify your `CMakeLists.txt` file.
+2. Modify your `CMakeLists.txt` file.
+
 ```cmake
-add_subdirectory(wheel)
-target_link_libraries(${YOUR_TARGET} wheel)
-target_include_directories(${YOUR_TARGET} PRIVATE wheel/include)
+add_subdirectory(third_party/wheel)
+target_link_libraries(${YOUR_TARGET} third_party/wheel)
+target_include_directories(${YOUR_TARGET} PRIVATE third_party/wheel/include)
 ```
 
 ### Test `wheel` with `googletest`
 
 ```bash
-git clone --recursive https://github.com/m1dsolo/wheel.git  # `--recursive` for googletest
-cd path/to/project
+git clone https://github.com/m1dsolo/wheel.git
+cd wheel
+git submodule update --init --depth=1
 cmake -B build -DBUILD_WHEEL_TEST=1
 cmake --build build -j4
-# add flag `-DCMAKE_BUILD_TYPE=Debug` to use debug mode instead of release mode
 ./build/test/wheel_test  # run test
 ```
 
 ## License
 
 [MIT](LICENSE) © m1dsolo
-
