@@ -91,4 +91,3 @@ class ChatApp(App[None]):
 if __name__ == '__main__':
     assert len(sys.argv) == 3
     ChatApp(sys.argv[1], int(sys.argv[2])).run()
-

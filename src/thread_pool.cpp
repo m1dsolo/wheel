@@ -28,8 +28,9 @@ ThreadPool::~ThreadPool() {
     stop_ = true;
     cv_.notify_all();
     for (auto &t : threads_) {
-        if (t.joinable()) 
+        if (t.joinable()) {
             t.join();
+        }
     }
 }
 

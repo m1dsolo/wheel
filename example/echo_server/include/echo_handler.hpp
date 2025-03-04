@@ -6,10 +6,8 @@ namespace wheel {
 
 class EchoHandler : public SocketHandler {
 public:
-    EchoHandler() = default;
-    ~EchoHandler() = default;
+    EchoHandler(Socket&& socket) : SocketHandler(std::move(socket)) {}
     EchoHandler(const EchoHandler&) = delete;
-    EchoHandler& operator=(const EchoHandler&) = delete;
 
     virtual bool process() override;
 
