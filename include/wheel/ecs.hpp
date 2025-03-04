@@ -16,10 +16,10 @@ namespace wheel {
 
 using Entity = uint32_t;
 using ComponentID = std::type_index;
+using EventID = std::type_index;
 using System = std::function<void()>;
-using EntityTemplate = std::unordered_map<ComponentID, std::any>;
 
-inline constexpr Entity EntityNone = -1;
+inline constexpr Entity EntityNone = 0;
 
 class EntityGenerator {
 public:
@@ -30,7 +30,7 @@ public:
     static void set_next_entity(Entity entity) { next_entity_ = entity; }
 
 private:
-    static inline Entity next_entity_ = 0;
+    static inline Entity next_entity_ = 1;
 };
 
 struct ComponentContainer {
@@ -61,8 +61,6 @@ public:
     void update();
     void shutdown();
 
-    Entity add_entity(EntityTemplate& component_map);
-
     template <typename... ComponentTypes>
     Entity add_entity(ComponentTypes&&... components);
 
@@ -73,7 +71,7 @@ public:
     bool has_entity(Entity entity) const;
 
     template <typename... ComponentTypes>
-    std::vector<Entity> get_entities() const;
+    auto get_entities() const;
 
     template <typename... ComponentTypes>
     Entity get_entity() const;
@@ -128,14 +126,33 @@ public:
     auto get_components(Entity entity);
 
     template <typename... ComponentTypes>
+    void exclude_components();
+
+    template <typename ComponentType>
+    void exclude_component();
+
+    template <typename... ComponentTypes>
     auto get_entity_and_components();
 
     void add_startup_system(const System& system);
     void add_system(const System& system);
     void add_shutdown_system(const System& system);
+
+    template <typename EventType>
+    void add_event(EventType&& event);
     
+    template <typename EventType, typename... Args>
+    void emplace_event(Args&&... args);
+
+    template <typename EventType>
+    bool has_event() const;
+
+    template <typename EventType>
+    auto get_events();
+
     void clear_entities();
     void clear_systems();
+    void clear_events();
 
 private:
     template <typename ComponentType>
@@ -148,10 +165,13 @@ private:
     std::unordered_map<Entity, std::unordered_map<ComponentID, size_t>> entity2components_;
     std::unordered_map<ComponentID, SparseSet<Entity>> component2entities_;
     std::unordered_map<ComponentID, ComponentContainer> component2containers_;
+    std::unordered_set<ComponentID> excluded_components_;
 
     std::vector<System> startup_systems_;
     std::vector<System> systems_;
     std::vector<System> shutdown_systems_;
+
+    std::unordered_map<EventID, std::vector<std::any>> current_frame_events_map_, next_frame_events_map_;
 };
 
 inline Entity EntityGenerator::generate() {
@@ -180,6 +200,8 @@ inline void ECS::update() {
     for (auto& system : systems_) {
         system();
     }
+    std::swap(current_frame_events_map_, next_frame_events_map_);
+    next_frame_events_map_.clear();
 }
 
 inline void ECS::shutdown() {
@@ -188,14 +210,6 @@ inline void ECS::shutdown() {
     }
     clear_systems();
     clear_entities();
-}
-
-inline Entity ECS::add_entity(EntityTemplate& component_map) {
-    Entity entity = EntityGenerator::generate();
-    for (auto& [component_id, component] : component_map) {
-        add_component(entity, component_id, component);
-    }
-    return entity;
 }
 
 template <typename... ComponentTypes>
@@ -227,37 +241,34 @@ inline bool ECS::has_entity(Entity entity) const {
 }
 
 template <typename... ComponentTypes>
-inline std::vector<Entity> ECS::get_entities() const {
-    std::vector<Entity> res;
-    if constexpr (sizeof...(ComponentTypes) == 0) {
-        for (const auto& [entity, _] : entity2components_) {
-            res.emplace_back(entity);
-        }
-    } else {
-        bool first = true;
-        for (const ComponentID& component_id : {static_cast<ComponentID>(typeid(ComponentTypes))...}) {
-            std::vector<Entity> null_entities;
-            std::vector<Entity>& entities = null_entities;
-            if (component2entities_.count(component_id)) {
-                entities = component2entities_.at(component_id).entities();
-            }
-            if (first) {
-                res = entities;
-                first = false;
-            } else {
-                res = Utils::intersection(res, entities);
-            }
-        }
-    }
+inline auto ECS::get_entities() const {
+    // exclude entities with excluded_components
+    auto all_entities = entity2components_ |
+        std::views::keys |
+        std::views::filter([this](Entity entity) {
+            const auto& components = entity2components_.at(entity) | std::views::keys;
+            return std::ranges::none_of(components, [this](const auto& component_id) {
+                return excluded_components_.count(component_id);
+            });
+        });
 
-    return res;
+    // filter entities with required components
+    if constexpr (sizeof...(ComponentTypes) > 0) {
+        return all_entities | std::views::filter([this](Entity entity) {
+            const auto& components = entity2components_.at(entity);
+            return (components.contains(typeid(ComponentTypes)) && ...);
+        });
+    } else {
+        return all_entities;
+    }
 }
 
 template <typename... ComponentTypes>
 inline Entity ECS::get_entity() const {
     auto entities = get_entities<ComponentTypes...>();
-    if (entities.size() > 0) {
-        return entities[0];
+    auto it = entities.begin();
+    if (it != entities.end()) {
+        return *it;
     }
     return EntityNone;
 }
@@ -274,7 +285,7 @@ inline void ECS::add_component(Entity entity, ComponentType&& component) {
 template <typename... ComponentTypes>
 inline void ECS::add_components(Entity entity, ComponentTypes&&... components) {
     auto components_tuple = std::make_tuple(std::forward<ComponentTypes>(components)...);
-    std::apply([this, entity](auto&&... component) {
+    std::apply( [this, entity](auto&&... component) {
         (add_component(entity, std::forward<ComponentTypes>(component)), ...);
     }, components_tuple);
 }
@@ -348,12 +359,12 @@ template <typename... ComponentTypes>
 inline auto ECS::get_components() {
     auto entities = get_entities<ComponentTypes...>();
     return std::views::zip(
-        std::vector<Entity>(entities) |
-        std::views::transform( [&](Entity entity) -> std::any& {
+        entities |
+        std::views::transform([&](Entity entity) -> ComponentTypes& {
             size_t idx = entity2components_.at(entity).at(typeid(ComponentTypes));
-            return component2containers_.at(typeid(ComponentTypes)).components.at(idx);
-        }) |
-        std::views::transform( [](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component) ; })
+            auto& component = component2containers_.at(typeid(ComponentTypes)).components.at(idx);
+            return std::any_cast<ComponentTypes&>(component);
+        })
     ...);
 }
 
@@ -363,16 +374,26 @@ inline auto ECS::get_components(Entity entity) {
 }
 
 template <typename... ComponentTypes>
+void ECS::exclude_components() {
+    (excluded_components_.insert(typeid(ComponentTypes)), ...);
+}
+
+template <typename ComponentType>
+void ECS::exclude_component() {
+    excluded_components_.insert(typeid(ComponentType));
+}
+
+template <typename... ComponentTypes>
 inline auto ECS::get_entity_and_components() {
     auto entities = get_entities<ComponentTypes...>();
     return std::views::zip(
-        std::vector<Entity>(entities),
-        std::vector<Entity>(entities) |
-        std::views::transform( [&](Entity entity) -> std::any& {
+        entities,
+        entities |
+        std::views::transform([&](Entity entity) -> ComponentTypes& {
             size_t idx = entity2components_.at(entity).at(typeid(ComponentTypes));
-            return component2containers_.at(typeid(ComponentTypes)).components.at(idx);
-        }) |
-        std::views::transform( [](std::any& component) -> ComponentTypes& { return std::any_cast<ComponentTypes&>(component) ; })
+            auto& component = component2containers_.at(typeid(ComponentTypes)).components.at(idx);
+            return std::any_cast<ComponentTypes&>(component);
+        })
     ...);
 }
 
@@ -388,17 +409,43 @@ inline void ECS::add_shutdown_system(const System& system) {
     shutdown_systems_.emplace_back(system);
 }
 
+template <typename EventType>
+inline void ECS::add_event(EventType&& event) {
+    next_frame_events_map_[typeid(EventType)].emplace_back(std::forward<EventType>(event));
+}
+
+template <typename EventType, typename... Args>
+inline void ECS::emplace_event(Args&&... args) {
+    next_frame_events_map_[typeid(EventType)].emplace_back(EventType(std::forward<Args>(args)...));
+}
+
+template <typename EventType>
+inline bool ECS::has_event() const {
+    return current_frame_events_map_.count(typeid(EventType));
+}
+
+template <typename EventType>
+inline auto ECS::get_events() {
+    return current_frame_events_map_[typeid(EventType)] |
+        std::views::transform([](std::any& event) -> EventType& { return std::any_cast<EventType&>(event); });
+}
+
 inline void ECS::clear_entities() {
     entity2components_.clear();
     component2entities_.clear();
     component2containers_.clear();
-    EntityGenerator::set_next_entity(0);
+    EntityGenerator::set_next_entity(wheel::EntityNone + 1);
 }
 
 inline void ECS::clear_systems() {
     startup_systems_.clear();
     systems_.clear();
     shutdown_systems_.clear();
+}
+
+inline void ECS::clear_events() {
+    current_frame_events_map_.clear();
+    next_frame_events_map_.clear();
 }
 
 template <typename ComponentType>
