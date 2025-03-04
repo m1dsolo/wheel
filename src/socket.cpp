@@ -60,24 +60,21 @@ bool Socket::set_reuse_addr() {
     return setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) != -1;
 }
 
-bool Socket::send(std::string_view s) {
+int Socket::send(std::string_view s) {
     Log::debug("Socket::send: {}", s);
-    return ::send(fd_, s.data(), s.length(), 0) != -1;
+    return ::send(fd_, s.data(), s.length(), 0);
 }
 
-bool Socket::recv(std::span<char> buf) {
+int Socket::recv(std::span<char> buf) {
     int n = ::recv(fd_, buf.data(), buf.size(), 0);
     if (n == -1) {
         if (errno == EAGAIN) {
             Log::debug("Socket::recv: EAGAIN");
-            return true;
         } else [[unlikely]] {
             Log::error("Socket::recv: {}", std::strerror(errno));
         }
-        return false;
     }
-    buf[n] = 0;
-    return true;
+    return n;
 }
 
 } // namespace wheel

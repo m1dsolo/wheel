@@ -43,8 +43,8 @@ public:
 
     bool set_reuse_addr();
 
-    bool send(std::string_view s);
-    bool recv(std::span<char> buf);
+    int send(std::string_view s);
+    int recv(std::span<char> buf);
 
     const std::string& get_peer_ip() const { return ip_; }
     unsigned short get_peer_port() const { return port_; }
