@@ -141,4 +141,19 @@ TEST_F(ECSTest, ComponentExclusion) {
     auto entities2 = ecs.get_entities<PositionComponent, HPComponent>();
     EXPECT_EQ(std::distance(entities2.begin(), entities2.end()), 1);
     EXPECT_EQ(entities2.front(), entity1);
+
+    auto res = ecs.has_components<PositionComponent, HPComponent>(entity1);
+    EXPECT_EQ(res, true);
+    res = ecs.has_components<PositionComponent>(entity1);
+    EXPECT_EQ(res, true);
+    res = ecs.has_components<HPComponent>(entity1);
+    EXPECT_EQ(res, true);
+    res = ecs.has_components<HPComponent>(entity2);
+    EXPECT_EQ(res, false);
+
+    int size = 0;
+    for (auto entity : ecs.get_entities()) {
+        size++;
+    }
+    EXPECT_EQ(size, 2);
 }

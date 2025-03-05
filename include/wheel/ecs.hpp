@@ -1,16 +1,17 @@
 // TODO: destroy
 #pragma once
 
+#include <algorithm>
 #include <any>
-#include <vector>
 #include <cstdint>
+#include <functional>
+#include <ranges>
 #include <typeindex>
 #include <unordered_map>
-#include <ranges>
+#include <unordered_set>
+#include <vector>
 
-#include <wheel/singleton.hpp>
 #include <wheel/sparse_set.hpp>
-#include <wheel/utils.hpp>
 
 namespace wheel {
 
@@ -33,9 +34,10 @@ private:
     static inline Entity next_entity_ = 1;
 };
 
+class ECS;
+
 struct ComponentContainer {
-public:
-    explicit ComponentContainer(std::type_index component_id);
+    ComponentContainer(ECS& ecs, std::type_index component_id);
 
     template <typename ComponentType>
     void add(ComponentType&& component, Entity entity);
@@ -50,13 +52,18 @@ public:
     std::vector<Entity> invert_index;
 
     std::type_index component_id;
+
+    ECS& ecs;
 };
 
-class ECS : public Singleton<ECS> {
-    friend class Singleton<ECS>;
+class ECS {
     friend class ComponentContainer;
 
 public:
+    ECS() = default;
+    ~ECS() = default;
+    ECS(const ECS&) = delete;
+
     void startup() const;
     void update();
     void shutdown();
@@ -158,14 +165,10 @@ private:
     template <typename ComponentType>
     void add_component(Entity entity, const std::type_index& component_id, ComponentType&& component);
 
-    ECS() = default;
-    ~ECS() = default;
-    ECS(const ECS&) = delete;
-
     std::unordered_map<Entity, std::unordered_map<ComponentID, size_t>> entity2components_;
     std::unordered_map<ComponentID, SparseSet<Entity>> component2entities_;
     std::unordered_map<ComponentID, ComponentContainer> component2containers_;
-    std::unordered_set<ComponentID> excluded_components_;
+    std::unordered_set<ComponentID> excluded_component_ids_;
 
     std::vector<System> startup_systems_;
     std::vector<System> systems_;
@@ -178,7 +181,8 @@ inline Entity EntityGenerator::generate() {
     return next_entity_++;
 }
 
-inline ComponentContainer::ComponentContainer(std::type_index component_id) : component_id(component_id) {}
+inline ComponentContainer::ComponentContainer(ECS& ecs, std::type_index component_id)
+    : ecs(ecs), component_id(component_id) {}
 
 template <typename ComponentType>
 inline void ComponentContainer::add(ComponentType&& component, Entity entity) {
@@ -220,6 +224,9 @@ inline Entity ECS::add_entity(ComponentTypes&&... components) {
 template <typename... ComponentTypes>
 Entity ECS::add_entity(Entity entity, ComponentTypes&&... components) {
     EntityGenerator::set_next_entity(std::max(EntityGenerator::next_entity(), entity + 1));
+    if (!entity2components_.count(entity)) {
+        entity2components_[entity] = {};
+    }
     if constexpr (sizeof...(ComponentTypes) > 0) {
         add_components(entity, std::forward<ComponentTypes>(components)...);
     }
@@ -242,24 +249,26 @@ inline bool ECS::has_entity(Entity entity) const {
 
 template <typename... ComponentTypes>
 inline auto ECS::get_entities() const {
-    // exclude entities with excluded_components
-    auto all_entities = entity2components_ |
-        std::views::keys |
-        std::views::filter([this](Entity entity) {
-            const auto& components = entity2components_.at(entity) | std::views::keys;
-            return std::ranges::none_of(components, [this](const auto& component_id) {
-                return excluded_components_.count(component_id);
+    // return all entities regardless of whether exclude
+    if constexpr (sizeof...(ComponentTypes) == 0) {
+        return entity2components_ | std::views::keys;
+    } else {
+        // exclude entities with excluded_components
+        std::unordered_set<std::type_index> input_component_ids{typeid(ComponentTypes)...};
+        auto all_entities = entity2components_ |
+            std::views::keys |
+            std::views::filter([this, input_component_ids](Entity entity) {
+                const auto& component_ids = entity2components_.at(entity) | std::views::keys;
+                return std::ranges::none_of(component_ids, [this, input_component_ids](const auto& component_id) {
+                    return excluded_component_ids_.count(component_id) && !input_component_ids.count(component_id);
+                });
             });
-        });
 
-    // filter entities with required components
-    if constexpr (sizeof...(ComponentTypes) > 0) {
+        // filter entities with required components
         return all_entities | std::views::filter([this](Entity entity) {
             const auto& components = entity2components_.at(entity);
             return (components.contains(typeid(ComponentTypes)) && ...);
         });
-    } else {
-        return all_entities;
     }
 }
 
@@ -285,7 +294,7 @@ inline void ECS::add_component(Entity entity, ComponentType&& component) {
 template <typename... ComponentTypes>
 inline void ECS::add_components(Entity entity, ComponentTypes&&... components) {
     auto components_tuple = std::make_tuple(std::forward<ComponentTypes>(components)...);
-    std::apply( [this, entity](auto&&... component) {
+    std::apply([this, entity](auto&&... component) {
         (add_component(entity, std::forward<ComponentTypes>(component)), ...);
     }, components_tuple);
 }
@@ -375,12 +384,12 @@ inline auto ECS::get_components(Entity entity) {
 
 template <typename... ComponentTypes>
 void ECS::exclude_components() {
-    (excluded_components_.insert(typeid(ComponentTypes)), ...);
+    (excluded_component_ids_.insert(typeid(ComponentTypes)), ...);
 }
 
 template <typename ComponentType>
 void ECS::exclude_component() {
-    excluded_components_.insert(typeid(ComponentType));
+    excluded_component_ids_.insert(typeid(ComponentType));
 }
 
 template <typename... ComponentTypes>
@@ -456,7 +465,7 @@ inline void ECS::add_component(Entity entity, const std::type_index& component_i
 
     component2entities_[component_id].add(entity);
     if (!component2containers_.count(component_id)) {
-        component2containers_.emplace(component_id, ComponentContainer(component_id));
+        component2containers_.emplace(component_id, ComponentContainer(*this, component_id));
     }
     auto& component_container = component2containers_.at(component_id);
     component_container.add(std::forward<ComponentType>(component), entity);
@@ -465,7 +474,7 @@ inline void ECS::add_component(Entity entity, const std::type_index& component_i
 
 inline bool ComponentContainer::del(size_t idx) {
     if (idx < components.size()) {
-        auto& entity2components = ECS::instance().entity2components_;
+        auto& entity2components = ecs.entity2components_;
         if (idx < components.size() - 1) {
             components[idx] = std::move(components.back());
             invert_index[idx] = std::move(invert_index.back());
