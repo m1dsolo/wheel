@@ -12,7 +12,9 @@ template <typename T>
 struct Vector2D {
     T x, y;
 
-    Vector2D(T x = 0, T y = 0) : x(x), y(y) {}
+    Vector2D() : x(0), y(0) {}
+    Vector2D(T x) : x(x), y(x) {}
+    Vector2D(T x, T y) : x(x), y(y) {}
     Vector2D(const Vector2D& other) : x(other.x), y(other.y) {}
     Vector2D(Vector2D&& other) : x(other.x), y(other.y) {}
 
@@ -46,9 +48,9 @@ struct Vector2D {
             std::clamp(self.y, y_min, y_max)
         };
     }
-    void clamp_(this Vector2D self, T x_min, T x_max, T y_min, T y_max) {
-        self.x = std::clamp(self.x, x_min, x_max);
-        self.y = std::clamp(self.y, y_min, y_max);
+    void clamp_(T x_min, T x_max, T y_min, T y_max) {
+        x = std::clamp(x, x_min, x_max);
+        y = std::clamp(y, y_min, y_max);
     }
 
     Vector2D normalize(this Vector2D self) {
@@ -56,11 +58,11 @@ struct Vector2D {
         T length = std::sqrt(self.x * self.x + self.y * self.y);
         return {self.x / length, self.y / length};
     }
-    void normalize_(this Vector2D self) {
-        if (self == 0) return;
-        T length = std::sqrt(self.x * self.x + self.y * self.y);
-        self.x /= length;
-        self.y /= length;
+    void normalize_() {
+        if (*this == 0) return;
+        T length = std::sqrt(x * x + y * y);
+        x /= length;
+        y /= length;
     }
 
     T distance(this Vector2D self) {
