@@ -1,0 +1,9 @@
+build
+lib
+bin
+.cache
+__pycache__
+bak
+test.cpp
+todo.md
+Testing
