@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <queue>
+#include <unordered_set>
 #include <cassert>
 #include <optional>
 
@@ -17,7 +18,9 @@ class Timer {
 public:
     Timer() = default;
 
-    void add(time_t interval_us, timer_func_t func);
+    timer_id_t add(time_t interval_us, timer_func_t func);
+    void remove(timer_id_t id);
+
     time_t tick() const;
     void pause();
     void resume();
@@ -32,6 +35,7 @@ private:
     struct Node;
 
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> nodes_;
+    std::unordered_set<timer_id_t> del_ids_;
 
     // for pause and resume
     bool pause_ = false;

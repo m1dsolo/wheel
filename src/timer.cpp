@@ -5,9 +5,15 @@
 
 namespace wheel {
 
-void Timer::add(time_t interval_us,  timer_func_t func) {
+timer_id_t Timer::add(time_t interval_us,  timer_func_t func) {
     assert(interval_us >= 0);
-    nodes_.emplace(tick() + interval_us, func);
+    Node node{tick() + interval_us, func};
+    nodes_.emplace(std::move(node));
+    return node.id;
+}
+
+void Timer::remove(timer_id_t id) {
+    del_ids_.emplace(id);
 }
 
 time_t Timer::tick() const {
@@ -23,12 +29,13 @@ void Timer::pause() {
     }
 }
 
+// TODO: optimize
 void Timer::resume() {
     if (pause_) {
         time_t pause_duration = tick() - pause_start_tick_;
         std::priority_queue<Node, std::vector<Node>, std::greater<Node>> tmp;
         while (!nodes_.empty()) {
-            Node node = std::move(nodes_.top()); nodes_.pop();
+            auto node = std::move(nodes_.top()); nodes_.pop();
             node.expire_time += pause_duration;
             tmp.emplace(node);
         }
@@ -45,6 +52,12 @@ std::optional<timer_id_t> Timer::update() {
     auto cur = tick();
     if (cur >= nodes_.top().expire_time) {
         Node node = std::move(nodes_.top()); nodes_.pop();
+        
+        if (del_ids_.contains(node.id)) {
+            del_ids_.erase(node.id);
+            return std::nullopt;
+        }
+
         auto interval = node.func();
         if (interval > 0) {
             node.expire_time = cur + interval;
