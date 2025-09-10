@@ -1,15 +1,18 @@
 #pragma once
 
+#include <wheel/singleton.hpp>
+
 #include <random>
 
 namespace wheel {
 
-class Random {
+class Random : public Singleton<Random> {
+    friend class Singleton<Random>;
+     
 public:
-    Random() = default;
-    ~Random() = default;
-
-    void set_seed(unsigned int seed);
+    void set_seed(unsigned int seed) {
+        generator_.seed(seed);
+    }
 
     template <typename T>
     T uniform(T min, T max) {
@@ -24,6 +27,9 @@ public:
     }
 
 private:
+    Random() : generator_(std::random_device{}()) {}
+    Random(const Random&) = delete;
+
     std::mt19937 generator_;
 };
 
