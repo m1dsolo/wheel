@@ -120,6 +120,23 @@ struct Vector {
         }
     }
 
+    T euclidean_distance(const Vector<N, T>& other) {
+        T sum = 0;
+        for (size_t i = 0; i < N; ++i) {
+            T diff = data[i] - other.data[i];
+            sum += diff * diff;
+        }
+        return std::sqrt(sum);
+    }
+
+    T manhattan_distance(const Vector<N, T>& other) {
+        T sum = 0;
+        for (size_t i = 0; i < N; ++i) {
+            sum += std::abs(data[i] - other.data[i]);
+        }
+        return sum;
+    }
+
     T dot(const Vector<N, T>& other) const {
         T result = 0;
         for (size_t i = 0; i < N; ++i) {
