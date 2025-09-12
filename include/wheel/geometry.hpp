@@ -9,6 +9,9 @@
 
 namespace wheel {
 
+template <typename T>
+class Circle;
+
 template <size_t N, typename T>
 struct Vector {
     std::array<T, N> data;
@@ -258,6 +261,10 @@ struct Rect {
         return x0 < other.x1 && x1 > other.x0 && y0 < other.y1 && y1 > other.y0;
     }
 
+    bool is_overlapping(const Circle<T>& circle) const {
+        return circle.is_overlapping(*this);
+    }
+
     bool is_zero() const {
         return *this == Rect<T>{};
     }
@@ -283,6 +290,110 @@ struct Rect {
     T y0 = 0;
     T x1 = 0;
     T y1 = 0;
+};
+
+template <typename T>
+struct Circle {
+    Circle() {}
+    Circle(T center_x, T center_y, T radius) 
+        : center({center_x, center_y}), radius(radius) {}
+    Circle(const Vector2D<T>& center, T radius) 
+        : center(center), radius(radius) {}
+    Circle(const Circle<T>& other) 
+        : center(other.center), radius(other.radius) {}
+    Circle(Circle&& other) 
+        : center(std::move(other.center)), radius(other.radius) {}
+
+    Circle& operator=(const Circle<T>& other) {
+        center = other.center;
+        radius = other.radius;
+        return *this;
+    }
+    Circle& operator=(Circle&& other) {
+        center = std::move(other.center);
+        radius = other.radius;
+        return *this;
+    }
+
+    T diameter() const { return radius * 2; }
+
+    friend std::ostream& operator<<(std::ostream& os, const Circle& circle) {
+        return os << "Center: (" << circle.center[0] << ", " << circle.center[1] 
+                  << "), Radius: " << circle.radius;
+    }
+
+    bool operator==(const Circle<T>& other) const {
+        return center == other.center && radius == other.radius;
+    }
+
+    bool contains(const Vector2D<T>& point) const {
+        const T dx = point[0] - center[0];
+        const T dy = point[1] - center[1];
+        return (dx * dx + dy * dy) <= (radius * radius);
+    }
+
+    bool contains(const Rect<T>& rect) const {
+        return contains(rect.left_top()) &&
+               contains({rect.x1, rect.y0}) &&
+               contains({rect.x0, rect.y1}) &&
+               contains({rect.x1, rect.y1});
+    }
+
+    bool is_overlapping(const Circle<T>& other) const {
+        const T dx = center[0] - other.center[0];
+        const T dy = center[1] - other.center[1];
+        const T distance_sq = dx * dx + dy * dy;
+        const T radius_sum = radius + other.radius;
+        return distance_sq <= (radius_sum * radius_sum);
+    }
+
+    bool is_overlapping(const Rect<T>& rect) const {
+        const T closest_x = std::max(rect.x0, std::min(center[0], rect.x1));
+        const T closest_y = std::max(rect.y0, std::min(center[1], rect.y1));
+        
+        const T dx = center[0] - closest_x;
+        const T dy = center[1] - closest_y;
+        
+        return (dx * dx + dy * dy) <= (radius * radius);
+    }
+
+    bool is_zero() const {
+        return radius == 0 && center[0] == 0 && center[1] == 0;
+    }
+
+    Circle<T> merge(const Circle<T>& other) const {
+        const T dx = other.center[0] - center[0];
+        const T dy = other.center[1] - center[1];
+        const T distance = std::sqrt(dx * dx + dy * dy);
+        
+        Vector2D<T> new_center = {
+            (center[0] + other.center[0]) / 2,
+            (center[1] + other.center[1]) / 2
+        };
+        
+        T new_radius = (distance + radius + other.radius) / 2;
+        
+        return Circle<T>(new_center, new_radius);
+    }
+
+    template <typename U>
+    operator Circle<U>() const {
+        return {static_cast<Vector2D<U>>(center), static_cast<U>(radius)};
+    }
+
+    Rect<T> bounding_box() const {
+        return Rect<T>(
+            center[0] - radius, center[1] - radius,
+            center[0] + radius, center[1] + radius
+        );
+    }
+
+    Vector2D<T> size() const {
+        return { diameter(), diameter() };
+    }
+
+    Vector2D<T> center = {0, 0};
+    T radius = 0;
 };
 
 }  // namespace wheel
