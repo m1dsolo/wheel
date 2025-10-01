@@ -34,13 +34,16 @@ public:
         }
     }
 
+    // TODO: optimize
     std::vector<T> query(const T& value) const {
-        return query(get_rect_(value));
+        auto values = query(get_rect_(value));
+        values.erase(std::remove(values.begin(), values.end(), value), values.end());
+        return values;
     }
 
     std::vector<T> query(const Rect<float>& rect) const {
         auto values = std::vector<T>{};
-        query(root_.get(), node_rect_, rect, values);
+        query_(root_.get(), node_rect_, rect, values);
         return values;
     }
 
@@ -217,7 +220,7 @@ private:
         return false;
     }
 
-    void query(Node* node, const Rect<float>& node_rect, const Rect<float>& input_rect, std::vector<T>& values) const {
+    void query_(Node* node, const Rect<float>& node_rect, const Rect<float>& input_rect, std::vector<T>& values) const {
         // Log::assert_(input_rect.is_overlapping(node_rect), "QuadTree::query(): input_rect is not overlapping with node_rect");
 
         for (const auto& value : node->values) {
@@ -229,7 +232,7 @@ private:
             for (int i = 0; i < 4; i++) {
                 auto child_rect = calc_child_rect(node_rect, i);
                 if (input_rect.is_overlapping(child_rect)) {
-                    query(node->children[i].get(), child_rect, input_rect, values);
+                    query_(node->children[i].get(), child_rect, input_rect, values);
                 }
             }
         }
