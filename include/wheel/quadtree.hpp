@@ -55,9 +55,9 @@ public:
         print(root_.get(), node_rect_, "");
     }
 
-    std::vector<std::pair<T, T>> find_all_intersections() {
+    std::vector<std::pair<T, T>> query_all() const {
         auto intersections = std::vector<std::pair<T, T>>{};
-        find_all_intersections(root_.get(), intersections);
+        query_all(root_.get(), intersections);
         return intersections;
     }
 
@@ -257,7 +257,7 @@ private:
         }
     }
 
-    void find_all_intersections(Node* node, std::vector<std::pair<T, T>>& intersections) const {
+    void query_all(Node* node, std::vector<std::pair<T, T>>& intersections) const {
         for (int i = 1; i < node->values.size(); i++) {
             for (int j = 0; j < i; j++) {
                 const auto& vi = node->values[i], vj = node->values[j];
@@ -269,16 +269,16 @@ private:
         if (!is_leaf(node)) {
             for (const auto& child : node->children) {
                 for (const auto& value : node->values) {
-                    find_descendant_intersections(child.get(), value, intersections);
+                    query_children(child.get(), value, intersections);
                 }
             }
             for (const auto& child : node->children) {
-                find_all_intersections(child.get(), intersections);
+                query_all(child.get(), intersections);
             }
         }
     }
 
-    void find_descendant_intersections(Node* node, const T& value, std::vector<std::pair<T, T>>& intersections) const {
+    void query_children(Node* node, const T& value, std::vector<std::pair<T, T>>& intersections) const {
         for (const auto& other : node->values) {
             if (get_rect_(value).is_overlapping(get_rect_(other))) {
                 intersections.emplace_back(value, other);
@@ -286,7 +286,7 @@ private:
         }
         if (!is_leaf(node)) {
             for (const auto& child : node->children) {
-                find_descendant_intersections(child.get(), value, intersections);
+                query_children(child.get(), value, intersections);
             }
         }
     }
