@@ -123,7 +123,7 @@ struct Vector {
         }
     }
 
-    T euclidean_distance(const Vector<N, T>& other) {
+    T euclidean_distance(const Vector<N, T>& other) const {
         T sum = 0;
         for (size_t i = 0; i < N; ++i) {
             T diff = data[i] - other.data[i];
@@ -132,7 +132,7 @@ struct Vector {
         return std::sqrt(sum);
     }
 
-    T manhattan_distance(const Vector<N, T>& other) {
+    T manhattan_distance(const Vector<N, T>& other) const {
         T sum = 0;
         for (size_t i = 0; i < N; ++i) {
             sum += std::abs(data[i] - other.data[i]);
@@ -295,10 +295,8 @@ struct Rect {
 template <typename T>
 struct Circle {
     Circle() {}
-    Circle(T center_x, T center_y, T radius) 
+    Circle(T radius, T center_x = 0, T center_y = 0) 
         : center({center_x, center_y}), radius(radius) {}
-    Circle(const Vector2D<T>& center, T radius) 
-        : center(center), radius(radius) {}
     Circle(const Circle<T>& other) 
         : center(other.center), radius(other.radius) {}
     Circle(Circle&& other) 
