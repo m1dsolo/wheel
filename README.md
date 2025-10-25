@@ -29,6 +29,7 @@ The code structure is clear and easy to read.
 14. geometry: Geometry calculation.
 15. QuadTree: Quad tree.
 16. RingBuffer: Ring buffer.
+17. ID: faster than string
 
 For usage examples, please refer to the test cases in the `test` directory.
 I will update `wiki` in the future.
